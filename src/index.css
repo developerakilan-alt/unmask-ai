@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: #050806;
+    color: #e8f3ec;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Equinox is not available as a free web font; Space Grotesk is used as a
+     bold geometric sans-serif fallback, labeled via the font-equinox class. */
+  .font-equinox {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(8, 14, 11, 0.55);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(0, 255, 102, 0.16);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 24px rgba(0, 255, 102, 0.05),
+      0 8px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .glass-soft {
+    background: rgba(10, 18, 14, 0.4);
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    border: 1px solid rgba(0, 255, 102, 0.12);
+  }
+
+  .glass-pill {
+    background: rgba(8, 14, 11, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 255, 102, 0.14);
+  }
+
+  .neon-text {
+    color: #00ff66;
+    text-shadow: 0 0 18px rgba(0, 255, 102, 0.35);
+  }
+
+  .neon-border-glow {
+    box-shadow: 0 0 0 1px rgba(0, 255, 102, 0.25), 0 0 24px rgba(0, 255, 102, 0.18);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  @keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  .liquid-btn {
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.4s ease, box-shadow 0.4s ease;
+  }
+  .liquid-btn:hover {
+    transform: scale(1.015);
+    border-radius: 24px;
+    box-shadow: 0 0 32px rgba(0, 255, 102, 0.4);
+  }
+  .liquid-btn:active {
+    transform: scale(0.985);
+    border-radius: 18px;
+  }
+}
