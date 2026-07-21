@@ -19,6 +19,13 @@ export interface AnalysisResult {
   gridW: number;
   gridH: number;
   pixels: number;
+  reportId: string;
+  createdAt: string;
+  heatmaps: {
+    forensic: string; // dataURL — anomaly heatmap (red = synthetic regions)
+    edge: string; // dataURL — Sobel edge magnitude
+    noise: string; // dataURL — local noise variance
+  };
 }
 
 const MAX_DIM = 384;
@@ -327,6 +334,11 @@ export async function analyzeImage(img: HTMLImageElement): Promise<AnalysisResul
     `Combined weighted score → ${aiPercent}% AI / ${realPercent}% real. Verdict: ${verdict === 'ai' ? 'AI-GENERATED' : 'AUTHENTIC'}.`,
   ];
 
+  const heatmaps = buildHeatmaps(ctx, w, h, gray, lap, aiLikelihood);
+
+  const reportId = makeReportId();
+  const createdAt = new Date().toISOString();
+
   return {
     verdict,
     aiPercent,
@@ -336,5 +348,121 @@ export async function analyzeImage(img: HTMLImageElement): Promise<AnalysisResul
     gridW: w,
     gridH: h,
     pixels: n,
+    reportId,
+    createdAt,
+    heatmaps,
   };
+}
+
+/** Build three forensic visualizations as data URLs. */
+function buildHeatmaps(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  gray: Float32Array,
+  lap: Float32Array,
+  aiLikelihood: number,
+): { forensic: string; edge: string; noise: string } {
+  // --- Forensic / anomaly heatmap ---
+  // Combine local smoothness + low noise into an "anomaly" map; blend hotter
+  // when the overall image leans AI. Brighter red = more synthetic-looking.
+  const out = ctx.createImageData(w, h);
+  const BLOCK = 8;
+  const anomaly = new Float32Array(w * h);
+  for (let by = 0; by + BLOCK <= h; by += BLOCK) {
+    for (let bx = 0; bx + BLOCK <= w; bx += BLOCK) {
+      let sum = 0;
+      let sum2 = 0;
+      const cnt = BLOCK * BLOCK;
+      let localNoise = 0;
+      for (let yy = 0; yy < BLOCK; yy++) {
+        for (let xx = 0; xx < BLOCK; xx++) {
+          const idx = (by + yy) * w + (bx + xx);
+          const v = gray[idx];
+          sum += v;
+          sum2 += v * v;
+          localNoise += Math.abs(lap[idx]);
+        }
+      }
+      const mean = sum / cnt;
+      const variance = sum2 / cnt - mean * mean;
+      const noiseLevel = localNoise / cnt;
+      // low variance + low noise → synthetic-like block
+      const blockAnomaly = clamp01(logistic(12 - variance, 0, 6) * 0.6 + logistic(8 - noiseLevel, 0, 4) * 0.4);
+      for (let yy = 0; yy < BLOCK; yy++) {
+        for (let xx = 0; xx < BLOCK; xx++) {
+          anomaly[(by + yy) * w + (bx + xx)] = blockAnomaly;
+        }
+      }
+    }
+  }
+  // Boost when overall AI likelihood is high; keep subtle when real.
+  const boost = 0.35 + aiLikelihood * 0.65;
+  for (let i = 0; i < w * h; i++) {
+    const a = clamp01(anomaly[i] * boost);
+    // transparent → red ramp
+    out.data[i * 4] = 255 * a; // R
+    out.data[i * 4 + 1] = 30 * a; // G
+    out.data[i * 4 + 2] = 20 * a; // B
+    out.data[i * 4 + 3] = Math.round(a * 170); // A
+  }
+  const forensicCanvas = document.createElement('canvas');
+  forensicCanvas.width = w;
+  forensicCanvas.height = h;
+  forensicCanvas.getContext('2d')!.putImageData(out, 0, 0);
+  const forensic = forensicCanvas.toDataURL('image/png');
+
+  // --- Edge map (Sobel magnitude, green) ---
+  const edgeCanvas = document.createElement('canvas');
+  edgeCanvas.width = w;
+  edgeCanvas.height = h;
+  const ectx = edgeCanvas.getContext('2d')!;
+  const eimg = ectx.createImageData(w, h);
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const idx = y * w + x;
+      const gx =
+        -gray[idx - w - 1] - 2 * gray[idx - 1] - gray[idx + w - 1] +
+        gray[idx - w + 1] + 2 * gray[idx + 1] + gray[idx + w + 1];
+      const gy =
+        -gray[idx - w - 1] - 2 * gray[idx - w] - gray[idx - w + 1] +
+        gray[idx + w - 1] + 2 * gray[idx + w] + gray[idx + w + 1];
+      const mag = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+      const o = idx * 4;
+      eimg.data[o] = 0;
+      eimg.data[o + 1] = mag;
+      eimg.data[o + 2] = mag * 0.4;
+      eimg.data[o + 3] = 180;
+    }
+  }
+  ectx.putImageData(eimg, 0, 0);
+  const edge = edgeCanvas.toDataURL('image/png');
+
+  // --- Noise map (local Laplacian variance, cyan/blue) ---
+  const noiseCanvas = document.createElement('canvas');
+  noiseCanvas.width = w;
+  noiseCanvas.height = h;
+  const nctx = noiseCanvas.getContext('2d')!;
+  const nimg = nctx.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) {
+    const v = clamp01(logistic(Math.abs(lap[i]), 6, 5));
+    const o = i * 4;
+    nimg.data[o] = 0;
+    nimg.data[o + 1] = v * 200;
+    nimg.data[o + 2] = v * 255;
+    nimg.data[o + 3] = Math.round(v * 160);
+  }
+  nctx.putImageData(nimg, 0, 0);
+  const noise = noiseCanvas.toDataURL('image/png');
+
+  return { forensic, edge, noise };
+}
+
+function makeReportId(): string {
+  const s = 'abcdef0123456789';
+  let id = 'UA-';
+  for (let i = 0; i < 4; i++) id += s[(Math.random() * s.length) | 0];
+  id += '-';
+  for (let i = 0; i < 4; i++) id += s[(Math.random() * s.length) | 0];
+  return id;
 }

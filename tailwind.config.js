@@ -4,17 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: '#050806',
-        'ink-soft': '#0a120c',
+        ink: '#050505',
+        'ink-soft': '#0A0F0A',
         neon: {
-          DEFAULT: '#00FF66',
-          50: '#ccffd9',
-          100: '#b3ffc2',
-          200: '#80ff9c',
-          300: '#4dff75',
-          400: '#1aff4f',
-          500: '#00FF66',
-          600: '#00cc52',
+          DEFAULT: '#00FF88',
+          50: '#ccffe0',
+          100: '#b3ffd1',
+          200: '#80ffaa',
+          300: '#4dff85',
+          400: '#1aff5d',
+          500: '#00FF88',
+          600: '#00C853',
           700: '#00993d',
           800: '#006628',
           900: '#003314',
@@ -64,6 +64,9 @@ export default {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
+        'border-sweep': {
+          to: { transform: 'rotate(360deg)' },
+        },
       },
       animation: {
         'blob-a': 'blob-drift-a 22s ease-in-out infinite',
@@ -73,6 +76,7 @@ export default {
         'ripple': 'ripple 2.4s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
         'fade-up': 'fade-up 0.4s ease-out both',
+        'border-sweep': 'border-sweep 4s linear infinite',
       },
     },
   },

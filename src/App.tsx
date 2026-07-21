@@ -6,9 +6,7 @@ import {
   FileImage,
   ArrowRight,
   ArrowLeft,
-  UploadCloud,
   ScanLine,
-  ShieldCheck,
   Loader2,
   CheckCircle2,
   AlertTriangle,
@@ -22,9 +20,24 @@ import {
   Mail,
   Fingerprint,
   Eye,
+  Download,
+  Camera,
+  Menu,
 } from 'lucide-react';
 import { analyzeImage, type AnalysisResult } from './analyze';
 import { useAuth } from './lib/auth';
+import NeuralBackground from './components/NeuralBackground';
+import {
+  StatsSection,
+  TechSection,
+  WhyUsSection,
+  ModelsSection,
+  TestimonialsSection,
+  ApiSection,
+  FaqSection,
+  CtaSection,
+  Footer,
+} from './components/sections';
 
 type Page = 'home' | 'analyzing' | 'result';
 
@@ -79,18 +92,32 @@ export default function App() {
     setPage('home');
   };
 
+  const scrollToUpload = () => {
+    document.getElementById('upload')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden font-equinox">
       <LiquidBackground />
       <div className="relative z-10">
-        <Navbar onAuthOpen={() => setAuthOpen(true)} />
+        <Navbar onAuthOpen={() => setAuthOpen(true)} onUpload={scrollToUpload} />
         {page === 'home' && (
-          <HomePage
-            file={file}
-            previewUrl={previewUrl}
-            onFiles={handleFiles}
-            onAnalyze={startAnalysis}
-          />
+          <>
+            <HomePage
+              file={file}
+              previewUrl={previewUrl}
+              onFiles={handleFiles}
+              onAnalyze={startAnalysis}
+            />
+            <StatsSection />
+            <TechSection />
+            <WhyUsSection />
+            <ModelsSection />
+            <TestimonialsSection />
+            <ApiSection />
+            <FaqSection />
+            <CtaSection onUpload={scrollToUpload} />
+          </>
         )}
         {page === 'analyzing' && (
           <AnalyzingPage previewUrl={previewUrl} onDone={onAnalyzed} onCancel={reset} />
@@ -98,7 +125,6 @@ export default function App() {
         {page === 'result' && result && (
           <ResultPage result={result} previewUrl={previewUrl} onNew={newImage} onBack={reset} />
         )}
-        {page === 'home' && <HowItWorks />}
         <Footer />
       </div>
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
@@ -112,6 +138,7 @@ function LiquidBackground() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0">
       <div className="absolute inset-0 bg-ink" />
+      <NeuralBackground />
       <div
         className="absolute inset-0"
         style={{
@@ -135,34 +162,83 @@ function LiquidBackground() {
 
 /* ---------- Navbar ---------- */
 
-function Navbar({ onAuthOpen }: { onAuthOpen: () => void }) {
+const NAV_LINKS = [
+  { label: 'Home', href: '#top' },
+  { label: 'Features', href: '#why' },
+  { label: 'Technology', href: '#technology' },
+  { label: 'API', href: '#api' },
+  { label: 'FAQ', href: '#faq' },
+];
+
+function Navbar({ onAuthOpen, onUpload }: { onAuthOpen: () => void; onUpload: () => void }) {
   const { user, signOut } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const go = (href: string) => {
+    setMenuOpen(false);
+    if (href === '#top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <header className="px-4 pt-5 sm:px-6">
-      <nav className="glass mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-2.5">
+    <header id="top" className="px-4 pt-5 sm:px-6">
+      <nav
+        className={`glass mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-3 transition-all duration-300 sm:px-6 ${
+          scrolled ? 'shadow-[0_8px_40px_rgba(0,0,0,0.5)]' : ''
+        }`}
+      >
+        <button onClick={() => go('#top')} className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg border border-neon/40 bg-neon/10">
             <Scan className="h-4 w-4 text-neon" strokeWidth={2.5} />
           </span>
           <span className="text-lg font-bold tracking-tight text-white">Unmask AI</span>
+        </button>
+
+        <div className="hidden items-center gap-6 md:flex">
+          {NAV_LINKS.map((l) => (
+            <button
+              key={l.label}
+              onClick={() => go(l.href)}
+              className="text-sm text-white/60 transition-colors hover:text-neon"
+            >
+              {l.label}
+            </button>
+          ))}
         </div>
-        <div className="flex items-center gap-2 sm:gap-4">
+
+        <div className="flex items-center gap-2 sm:gap-3">
           {user ? (
             <>
-              <span className="hidden text-sm text-white/60 sm:inline">{user.email}</span>
+              <span className="hidden text-sm text-white/60 lg:inline">{user.email}</span>
               <button
                 onClick={signOut}
                 className="glass-pill flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
               >
                 <LogOut className="h-3.5 w-3.5" />
-                Sign Out
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </>
           ) : (
             <>
               <button
+                onClick={onUpload}
+                className="hidden rounded-xl px-3 py-2 text-sm text-white/70 transition-colors hover:text-neon sm:inline"
+              >
+                Try It
+              </button>
+              <button
                 onClick={() => onAuthOpen()}
-                className="px-2 text-sm text-white/70 transition-colors hover:text-white sm:px-3"
+                className="px-2 text-sm text-white/70 transition-colors hover:text-white"
               >
                 Login
               </button>
@@ -174,8 +250,29 @@ function Navbar({ onAuthOpen }: { onAuthOpen: () => void }) {
               </button>
             </>
           )}
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 md:hidden"
+            aria-label="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </nav>
+
+      {menuOpen && (
+        <div className="glass mx-auto mt-2 max-w-6xl rounded-2xl px-4 py-3 md:hidden">
+          {NAV_LINKS.map((l) => (
+            <button
+              key={l.label}
+              onClick={() => go(l.href)}
+              className="block w-full py-2 text-left text-sm text-white/70 transition-colors hover:text-neon"
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      )}
     </header>
   );
 }
@@ -197,23 +294,34 @@ function HomePage({ file, previewUrl, onFiles, onAnalyze }: HomeProps) {
     <>
       <section className="px-4 pb-10 pt-16 text-center sm:pt-24">
         <div className="mx-auto max-w-3xl">
-          <h1 className="text-balance text-5xl font-bold leading-[1.05] tracking-tight text-white sm:text-7xl">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-neon/25 bg-neon/5 px-3.5 py-1.5 text-xs font-medium text-neon/90 animate-fade-up">
+            <Sparkles className="h-3.5 w-3.5" />
+            On-device forensics — images never leave your browser
+          </div>
+          <h1 className="text-balance text-5xl font-bold leading-[1.05] tracking-tight text-white sm:text-7xl animate-fade-up">
             Unmask AI
           </h1>
-          <h2 className="mt-4 text-balance text-2xl font-bold sm:text-4xl">
+          <h2
+            className="mt-4 text-balance text-2xl font-bold sm:text-4xl animate-fade-up"
+            style={{ animationDelay: '80ms' }}
+          >
             <span className="neon-text">Real</span>{' '}
             <span className="text-white/45">or</span>{' '}
             <span className="text-danger" style={{ textShadow: '0 0 18px rgba(255,59,59,0.35)' }}>
               AI-Generated?
             </span>
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-balance text-base leading-relaxed text-white/55 sm:text-lg">
-            Verify digital authenticity with our state-of-the-art detection models.
+          <p
+            className="mx-auto mt-5 max-w-xl text-balance text-base leading-relaxed text-white/55 sm:text-lg animate-fade-up"
+            style={{ animationDelay: '160ms' }}
+          >
+            Verify digital authenticity with our state-of-the-art detection models —
+            eight forensic techniques in under two seconds.
           </p>
         </div>
       </section>
 
-      <section className="px-4 pb-24">
+      <section id="upload" className="px-4 pb-24 pt-4 sm:pt-8">
         <div className="mx-auto w-full max-w-[550px]">
           <div
             onDrop={(e) => {
@@ -230,10 +338,21 @@ function HomePage({ file, previewUrl, onFiles, onAnalyze }: HomeProps) {
             role="button"
             tabIndex={0}
             onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && inputRef.current?.click()}
-            className={`glass relative cursor-pointer rounded-3xl border-2 border-dashed px-6 py-12 text-center transition-all duration-300 sm:py-14 ${
-              dragging ? 'border-neon/70 neon-border-glow scale-[1.01]' : 'border-neon/30'
+            className={`glass relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed px-6 py-12 text-center transition-all duration-300 sm:py-14 ${
+              dragging
+                ? 'border-neon/70 neon-border-glow scale-[1.01] bg-neon/[0.04]'
+                : 'border-neon/30 hover:border-neon/45'
             }`}
           >
+            {/* animated dashed border sweep */}
+            <div
+              className="pointer-events-none absolute inset-0 rounded-3xl opacity-40"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, transparent 0%, rgba(0,255,102,0.15) 12%, transparent 25%)',
+                animation: 'border-sweep 4s linear infinite',
+              }}
+            />
             <input
               ref={inputRef}
               type="file"
@@ -243,7 +362,7 @@ function HomePage({ file, previewUrl, onFiles, onAnalyze }: HomeProps) {
               onClick={(e) => e.stopPropagation()}
             />
             {previewUrl ? (
-              <div className="flex flex-col items-center">
+              <div className="relative flex flex-col items-center">
                 <div className="relative h-44 w-44 overflow-hidden rounded-2xl border border-neon/30 bg-black/40 shadow-[0_0_28px_rgba(0,255,102,0.18)]">
                   <img src={previewUrl} alt="preview" className="h-full w-full object-cover" />
                   <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-neon/15" />
@@ -253,20 +372,26 @@ function HomePage({ file, previewUrl, onFiles, onAnalyze }: HomeProps) {
               </div>
             ) : (
               <>
-                <div className="mx-auto grid h-20 w-20 place-items-center">
+                <div className="relative mx-auto grid h-20 w-20 place-items-center">
+                  <div className="absolute inset-0 rounded-full bg-neon/20 blur-xl" />
                   <div className="relative grid h-20 w-20 place-items-center rounded-full border border-neon/30 bg-neon/10 animate-pulse-glow">
-                    <div className="absolute inset-0 rounded-full bg-neon/20 blur-xl" />
-                    <Upload className="relative h-8 w-8 text-neon" strokeWidth={2.2} />
+                    <Upload className="h-8 w-8 text-neon" strokeWidth={2.2} />
                   </div>
                 </div>
-                <p className="mt-6 text-lg font-bold text-white">Drag &amp; drop your image here</p>
-                <p className="mt-1.5 text-sm text-white/45">or click to browse files</p>
+                <p className="relative mt-6 text-lg font-bold text-white">
+                  Drag &amp; drop your image here
+                </p>
+                <p className="relative mt-1.5 text-sm text-white/45">or click to browse files</p>
               </>
             )}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2.5">
               <span className="glass-pill inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white/60">
                 <FileImage className="h-3.5 w-3.5 text-neon/80" />
                 Supports JPG, PNG, WEBP
+              </span>
+              <span className="glass-pill inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white/60">
+                <Camera className="h-3.5 w-3.5 text-neon/80" />
+                Up to 20MB
               </span>
             </div>
           </div>
@@ -300,7 +425,7 @@ function HomePage({ file, previewUrl, onFiles, onAnalyze }: HomeProps) {
             disabled={!file}
             className={`liquid-btn mt-4 flex w-full items-center justify-center gap-2.5 rounded-2xl px-6 py-4 text-base font-bold transition-all ${
               file
-                ? 'bg-neon text-black hover:shadow-[0_0_32px_rgba(0,255,102,0.45)]'
+                ? 'bg-neon text-black hover:shadow-[0_0_32px_rgba(0,255,102,0.45)] hover:scale-[1.02]'
                 : 'cursor-not-allowed bg-white/[0.06] text-white/30'
             }`}
           >
@@ -334,6 +459,7 @@ function AnalyzingPage({
   onCancel: () => void;
 }) {
   const [step, setStep] = useState(0);
+  const [progress, setProgress] = useState(0);
   const imgRef = useRef<HTMLImageElement>(null);
   const startedRef = useRef(false);
 
@@ -343,22 +469,25 @@ function AnalyzingPage({
 
     let cancelled = false;
     const run = async () => {
-      // Wait for the image element to load.
       const img = await waitForImage(imgRef.current, previewUrl);
       if (cancelled) return;
 
-      // Step through the scan animation.
-      for (let i = 0; i < SCAN_STEPS.length; i++) {
+      const totalSteps = SCAN_STEPS.length;
+      for (let i = 0; i < totalSteps; i++) {
         if (cancelled) return;
         setStep(i);
-        await delay(i === SCAN_STEPS.length - 1 ? 350 : 260);
+        const stepProgress = ((i + 1) / totalSteps) * 85;
+        setProgress(stepProgress);
+        await delay(i === totalSteps - 1 ? 350 : 260);
       }
       if (cancelled) return;
 
-      // Run the actual analysis (fast — sub-second).
       const res = await analyzeImage(img);
       if (cancelled) return;
 
+      setProgress(100);
+      await delay(220);
+      if (cancelled) return;
       onDone(res);
     };
     run();
@@ -372,7 +501,6 @@ function AnalyzingPage({
     <section className="flex min-h-[70vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-[550px]">
         <div className="glass rounded-3xl px-6 py-10 sm:px-10">
-          {/* Scanning image */}
           <div className="flex flex-col items-center">
             <div className="relative h-56 w-56 overflow-hidden rounded-2xl border-2 border-neon/40 bg-black/40 shadow-[0_0_40px_rgba(0,255,102,0.25)]">
               {previewUrl && (
@@ -384,7 +512,6 @@ function AnalyzingPage({
                   crossOrigin="anonymous"
                 />
               )}
-              {/* moving scan line — active during scanning */}
               <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
                 <div
                   className="absolute left-0 right-0 h-0.5 bg-neon"
@@ -399,12 +526,25 @@ function AnalyzingPage({
             </div>
           </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-lg font-bold text-white">Analyzing image…</p>
-            <p className="mt-1 text-sm text-white/45">Scanning every pixel for AI signatures</p>
+          {/* progress bar */}
+          <div className="mt-6">
+            <div className="mb-2 flex items-center justify-between text-xs">
+              <span className="font-semibold text-neon">
+                {step < SCAN_STEPS.length ? SCAN_STEPS[step].label : 'Finalizing report…'}
+              </span>
+              <span className="text-white/45">{Math.round(progress)}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-neon transition-all duration-300"
+                style={{
+                  width: `${progress}%`,
+                  boxShadow: '0 0 12px rgba(0,255,102,0.6)',
+                }}
+              />
+            </div>
           </div>
 
-          {/* Step list */}
           <div className="mt-7 space-y-2.5">
             {SCAN_STEPS.map((s, i) => {
               const done = i < step;
@@ -461,6 +601,14 @@ function AnalyzingPage({
 
 const INDICATOR_ICONS = [Activity, Layers, ScanLine, Sparkles, Gauge, Fingerprint, Eye, Grid3x3];
 
+const HEATMAP_TABS = [
+  { key: 'forensic', label: 'Forensic Map' },
+  { key: 'edge', label: 'Edge Analysis' },
+  { key: 'noise', label: 'Noise Map' },
+] as const;
+
+type HeatmapTab = (typeof HEATMAP_TABS)[number]['key'];
+
 function ResultPage({
   result,
   previewUrl,
@@ -473,16 +621,73 @@ function ResultPage({
   onBack: () => void;
 }) {
   const isAI = result.verdict === 'ai';
+  const [tab, setTab] = useState<HeatmapTab>('forensic');
+  const [showOverlay, setShowOverlay] = useState(false);
+
   const glow = isAI
     ? 'border-danger/40 shadow-[0_0_40px_rgba(255,59,59,0.32)]'
     : 'border-neon/40 shadow-[0_0_40px_rgba(0,255,102,0.32)]';
 
+  const heatmapSrc = result.heatmaps[tab];
+
+  const reportMeta = [
+    { label: 'Report ID', value: result.reportId },
+    { label: 'Model', value: 'CNN + ViT Ensemble' },
+    { label: 'Dimensions', value: `${result.gridW}×${result.gridH}` },
+    { label: 'Pixels Scanned', value: result.pixels.toLocaleString() },
+    { label: 'Timestamp', value: new Date(result.createdAt).toLocaleString() },
+  ];
+
+  const downloadReport = () => {
+    const lines = [
+      'UNMASK AI — AUTHENTICITY REPORT',
+      '================================',
+      '',
+      `Report ID:     ${result.reportId}`,
+      `Timestamp:     ${new Date(result.createdAt).toLocaleString()}`,
+      `Image size:    ${result.gridW}x${result.gridH} (${result.pixels.toLocaleString()} px)`,
+      '',
+      `Verdict:       ${isAI ? 'AI-GENERATED' : 'AUTHENTIC'}`,
+      `Confidence:    AI ${result.aiPercent}% / Real ${result.realPercent}%`,
+      '',
+      'KEY INDICATORS',
+      '--------------',
+      ...result.indicators.map(
+        (ind, i) => `${String(i + 1).padStart(2, '0')}. ${ind.label.padEnd(28)} ${ind.value}`,
+      ),
+      '',
+      'DETAILED ANALYSIS',
+      '-----------------',
+      ...result.detailed.map((l, i) => `${String(i + 1).padStart(2, '0')}. ${l}`),
+      '',
+      'Generated by Unmask AI — on-device forensics.',
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${result.reportId}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <section className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-      <div className="w-full max-w-[550px]">
+      <div className="w-full max-w-2xl">
         <div className={`glass animate-fade-up rounded-3xl px-5 py-7 sm:px-7 ${glow}`}>
-          {/* Analyzed image — scan stopped, static */}
-          {previewUrl && (
+          {/* Report header */}
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-lg border border-neon/30 bg-neon/10">
+                <ScanLine className="h-4 w-4 text-neon" strokeWidth={2.5} />
+              </span>
+              <span className="text-sm font-bold text-white">Authenticity Report</span>
+            </div>
+            <span className="font-mono text-xs text-white/40">{result.reportId}</span>
+          </div>
+
+          {/* Analyzed image + heatmap tabs */}
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col items-center">
               <div
                 className={`relative h-52 w-52 overflow-hidden rounded-2xl border-2 bg-black/40 ${
@@ -494,15 +699,60 @@ function ResultPage({
                     : '0 0 36px rgba(0,255,102,0.4)',
                 }}
               >
-                <img src={previewUrl} alt="analyzed" className="h-full w-full object-cover" />
+                {previewUrl && (
+                  <img src={previewUrl} alt="analyzed" className="h-full w-full object-cover" />
+                )}
                 <div
                   className={`pointer-events-none absolute inset-0 ring-1 ring-inset ${
                     isAI ? 'ring-danger/30' : 'ring-neon/30'
                   }`}
                 />
               </div>
+              <p className="mt-2 text-xs uppercase tracking-wider text-white/45">Original</p>
             </div>
-          )}
+
+            <div className="flex flex-col items-center">
+              <div className="relative h-52 w-52 overflow-hidden rounded-2xl border-2 border-white/15 bg-black/40">
+                {previewUrl && showOverlay && (
+                  <img src={previewUrl} alt="base" className="absolute inset-0 h-full w-full object-cover" />
+                )}
+                <img
+                  src={heatmapSrc}
+                  alt={`${tab} heatmap`}
+                  className={`h-full w-full object-cover ${showOverlay ? 'opacity-70 mix-blend-screen' : ''}`}
+                />
+              </div>
+              <p className="mt-2 text-xs uppercase tracking-wider text-white/45">
+                {HEATMAP_TABS.find((t) => t.key === tab)?.label}
+              </p>
+            </div>
+          </div>
+
+          {/* Heatmap tab switcher */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            {HEATMAP_TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                  tab === t.key
+                    ? 'bg-neon/15 text-neon border border-neon/30'
+                    : 'text-white/50 hover:text-white border border-white/10'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+            <label className="ml-1 flex cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/50">
+              <input
+                type="checkbox"
+                checked={showOverlay}
+                onChange={(e) => setShowOverlay(e.target.checked)}
+                className="h-3 w-3 accent-[#00ff66]"
+              />
+              Overlay
+            </label>
+          </div>
 
           {/* Verdict */}
           <div className="mt-6 flex items-center justify-center gap-3">
@@ -527,7 +777,7 @@ function ResultPage({
             </div>
           </div>
 
-          {/* Confidence — AI% / Real% */}
+          {/* Confidence */}
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between text-xs">
               <span className="font-semibold text-danger">AI: {result.aiPercent}%</span>
@@ -537,22 +787,26 @@ function ResultPage({
             <div className="flex h-3 w-full overflow-hidden rounded-full bg-white/[0.06]">
               <div
                 className="h-full bg-danger transition-all duration-700"
-                style={{
-                  width: `${result.aiPercent}%`,
-                  boxShadow: '0 0 12px rgba(255,59,59,0.5)',
-                }}
+                style={{ width: `${result.aiPercent}%`, boxShadow: '0 0 12px rgba(255,59,59,0.5)' }}
               />
               <div
                 className="h-full bg-neon transition-all duration-700"
-                style={{
-                  width: `${result.realPercent}%`,
-                  boxShadow: '0 0 12px rgba(0,255,102,0.5)',
-                }}
+                style={{ width: `${result.realPercent}%`, boxShadow: '0 0 12px rgba(0,255,102,0.5)' }}
               />
             </div>
           </div>
 
-          {/* Key indicators — only after analysis complete (this page only renders then) */}
+          {/* Report metadata */}
+          <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {reportMeta.map((m) => (
+              <div key={m.label} className="glass-soft rounded-xl px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-white/40">{m.label}</p>
+                <p className="mt-0.5 truncate text-xs font-medium text-white/80">{m.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Key indicators */}
           <div className="mt-7">
             <p className="mb-3 text-xs uppercase tracking-widest text-white/45">Key Indicators</p>
             <div className="space-y-2.5">
@@ -560,10 +814,7 @@ function ResultPage({
                 const Icon = INDICATOR_ICONS[i % INDICATOR_ICONS.length];
                 const high = ind.aiLikelihood >= 0.5;
                 return (
-                  <div
-                    key={ind.label}
-                    className="glass-soft flex items-center gap-3 rounded-xl px-3.5 py-2.5"
-                  >
+                  <div key={ind.label} className="glass-soft flex items-center gap-3 rounded-xl px-3.5 py-2.5">
                     <span
                       className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
                         high ? 'bg-danger/10 text-danger' : 'bg-neon/10 text-neon'
@@ -573,9 +824,7 @@ function ResultPage({
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-sm font-medium text-white/85">
-                          {ind.label}
-                        </span>
+                        <span className="truncate text-sm font-medium text-white/85">{ind.label}</span>
                         <span className="shrink-0 text-xs text-white/45">{ind.value}</span>
                       </div>
                       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
@@ -591,7 +840,7 @@ function ResultPage({
             </div>
           </div>
 
-          {/* Detailed analysis — only after complete */}
+          {/* Detailed analysis */}
           <div className="mt-6">
             <p className="mb-3 text-xs uppercase tracking-widest text-white/45">Detailed Analysis</p>
             <div className="glass-soft space-y-2.5 rounded-xl px-4 py-4">
@@ -606,13 +855,21 @@ function ResultPage({
             </div>
           </div>
 
-          <div className="mt-6 flex gap-3">
+          {/* Actions */}
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
               onClick={onBack}
               className="flex items-center justify-center gap-2 rounded-xl border border-white/10 py-3 text-sm font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
+            </button>
+            <button
+              onClick={downloadReport}
+              className="flex items-center justify-center gap-2 rounded-xl border border-white/10 py-3 text-sm font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <Download className="h-4 w-4" />
+              Report
             </button>
             <button
               onClick={onNew}
@@ -657,10 +914,7 @@ function AuthModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div
-        className="glass w-full max-w-sm rounded-3xl p-7"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="glass w-full max-w-sm rounded-3xl p-7" onClick={(e) => e.stopPropagation()}>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="grid h-8 w-8 place-items-center rounded-lg border border-neon/40 bg-neon/10">
@@ -751,73 +1005,6 @@ function AuthModal({ onClose }: { onClose: () => void }) {
         </p>
       </div>
     </div>
-  );
-}
-
-/* ---------- How It Works ---------- */
-
-const STEPS = [
-  {
-    icon: UploadCloud,
-    title: 'Upload',
-    desc: 'Drag & drop or browse an image. JPG, PNG, and WEBP are supported.',
-  },
-  {
-    icon: ScanLine,
-    title: 'Analyze',
-    desc: 'Our forensics models scan pixel-level patterns and artifacts in seconds.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Get Results',
-    desc: 'Receive a clear verdict — authentic or AI-generated — with confidence.',
-  },
-];
-
-function HowItWorks() {
-  return (
-    <section className="px-4 pb-28">
-      <div className="mx-auto max-w-6xl">
-        <h2 className="text-center text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          How It Works
-        </h2>
-        <p className="mx-auto mt-3 max-w-md text-center text-sm text-white/50">
-          Three steps from upload to verdict.
-        </p>
-        <div className="mt-12 grid gap-5 sm:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <div key={step.title} className="glass rounded-2xl p-6">
-              <div className="flex items-center justify-between">
-                <span className="grid h-12 w-12 place-items-center rounded-xl border border-neon/30 bg-neon/10">
-                  <step.icon className="h-6 w-6 text-neon" strokeWidth={2} />
-                </span>
-                <span className="text-3xl font-bold text-white/10">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-              </div>
-              <h3 className="mt-5 text-xl font-bold text-white">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/50">{step.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Footer ---------- */
-
-function Footer() {
-  return (
-    <footer className="px-4 pb-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 border-t border-white/5 py-6 text-sm text-white/40 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <Scan className="h-4 w-4 text-neon/70" />
-          <span>Unmask AI</span>
-        </div>
-        <p>© {new Date().getFullYear()} Unmask AI. All rights reserved.</p>
-      </div>
-    </footer>
   );
 }
 

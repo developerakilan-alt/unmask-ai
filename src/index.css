@@ -15,7 +15,7 @@
 
   body {
     margin: 0;
-    background-color: #050806;
+    background-color: #050505;
     color: #e8f3ec;
     font-family: 'Space Grotesk', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -77,6 +77,10 @@
     10% { opacity: 1; }
     90% { opacity: 1; }
     100% { top: 100%; opacity: 0; }
+  }
+
+  @keyframes border-sweep {
+    to { transform: rotate(360deg); }
   }
 
   .liquid-btn {
