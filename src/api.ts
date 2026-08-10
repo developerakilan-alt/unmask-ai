@@ -165,7 +165,7 @@ export class ApiError extends Error {
 }
 
 /** Central request helper: attaches auth headers and parses errors. */
-async function apiFetch(path: string, init: RequestInit = {}, key?: string | null): Promise<Record<string, any>> {
+async function apiFetch<T = Record<string, any>>(path: string, init: RequestInit = {}, key?: string | null): Promise<T> {
   const headers = new Headers(init.headers || {});
   const id = await clientId();
   if (key) headers.set("Authorization", `Bearer ${key}`);
@@ -190,7 +190,7 @@ async function apiFetch(path: string, init: RequestInit = {}, key?: string | nul
       body?.detail || (typeof body?.error === "string" ? body.error : `Request failed (${response.status}).`);
     throw new ApiError(response.status, message);
   }
-  return body ?? {};
+  return (body ?? {}) as T;
 }
 
 function mapResult(data: BackendResult, sourceUrl?: string): AnalysisResult {
@@ -241,10 +241,15 @@ export async function analyzeUrl(url: string, apiKey?: string): Promise<Analysis
 }
 
 /** Analyze several images; the backend returns per-file results (with errors inline). */
-export async function analyzeBatch(files: File[]): Promise<(AnalysisResult | { filename: string; error: string })[]> {
+export async function analyzeBatch(
+  files: File[],
+): Promise<((AnalysisResult & { filename: string }) | { filename: string; error: string })[]> {
   const formData = new FormData();
   files.forEach((f) => formData.append("files", f));
-  const body = await apiFetch("/api/v1/analyze-batch", { method: "POST", body: formData });
+  const body = await apiFetch<{ results?: Record<string, any>[] }>("/api/v1/analyze-batch", {
+    method: "POST",
+    body: formData,
+  });
   return (body.results || []).map((r: any) =>
     r.error ? r : { ...mapResult(r as BackendResult), filename: r.filename },
   ) as any;
@@ -270,7 +275,7 @@ export async function deleteScan(scanId: string): Promise<void> {
 }
 
 export async function getScan(scanId: string): Promise<ScanRecord> {
-  return apiFetch(`/api/v1/scans/${scanId}`);
+  return apiFetch<ScanRecord>(`/api/v1/scans/${scanId}`);
 }
 
 export async function deleteMyData(): Promise<Record<string, number>> {
@@ -281,7 +286,7 @@ export async function deleteMyData(): Promise<Record<string, number>> {
 // Shares
 // ---------------------------------------------------------------------------
 export async function createShare(scanId: string): Promise<ShareInfo> {
-  return apiFetch("/api/v1/shares", {
+  return apiFetch<ShareInfo>("/api/v1/shares", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ scan_id: scanId }),
@@ -289,7 +294,7 @@ export async function createShare(scanId: string): Promise<ShareInfo> {
 }
 
 export async function getShare(shareId: string): Promise<{ result: ScanRecord }> {
-  return apiFetch(`/api/v1/shares/${shareId}`);
+  return apiFetch<{ result: ScanRecord }>(`/api/v1/shares/${shareId}`);
 }
 
 export async function deleteShare(shareId: string): Promise<void> {
@@ -305,7 +310,7 @@ export async function listWebhooks(): Promise<WebhookInfo[]> {
 }
 
 export async function createWebhook(url: string, events: string[] = ["scan.completed"]): Promise<WebhookInfo> {
-  return apiFetch("/api/v1/webhooks", {
+  return apiFetch<WebhookInfo>("/api/v1/webhooks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url, events }),
@@ -317,7 +322,7 @@ export async function deleteWebhook(webhookId: string): Promise<void> {
 }
 
 export async function testWebhook(webhookId: string): Promise<{ sent: boolean; status_code?: number; error?: string }> {
-  return apiFetch(`/api/v1/webhooks/${webhookId}/test`, { method: "POST" });
+  return apiFetch<{ sent: boolean; status_code?: number; error?: string }>(`/api/v1/webhooks/${webhookId}/test`, { method: "POST" });
 }
 
 // ---------------------------------------------------------------------------
@@ -329,7 +334,7 @@ export async function listApiKeys(): Promise<ApiKeyInfo[]> {
 }
 
 export async function createApiKey(name: string): Promise<{ id: string; name: string; key: string; created_at: number }> {
-  return apiFetch("/api/v1/api-keys", {
+  return apiFetch<{ id: string; name: string; key: string; created_at: number }>("/api/v1/api-keys", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
@@ -355,13 +360,13 @@ export async function reportScan(scanId: string | undefined, reason: string, con
 // Status
 // ---------------------------------------------------------------------------
 export async function getQuota(): Promise<QuotaInfo> {
-  return apiFetch("/api/v1/quota");
+  return apiFetch<QuotaInfo>("/api/v1/quota");
 }
 
 export async function getStats(): Promise<StatsInfo> {
-  return apiFetch("/api/v1/stats");
+  return apiFetch<StatsInfo>("/api/v1/stats");
 }
 
 export async function getHealth(): Promise<HealthInfo> {
-  return apiFetch("/health");
+  return apiFetch<HealthInfo>("/health");
 }
