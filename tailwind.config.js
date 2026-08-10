@@ -1,20 +1,21 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        ink: '#050806',
-        'ink-soft': '#0a120c',
+        ink: '#050505',
+        'ink-soft': '#0A0F0A',
         neon: {
-          DEFAULT: '#00FF66',
-          50: '#ccffd9',
-          100: '#b3ffc2',
-          200: '#80ff9c',
-          300: '#4dff75',
-          400: '#1aff4f',
-          500: '#00FF66',
-          600: '#00cc52',
+          DEFAULT: '#00FF88',
+          50: '#d0ffe8',
+          100: '#b3ffda',
+          200: '#80ffc2',
+          300: '#4dffaa',
+          400: '#1aff92',
+          500: '#00FF88',
+          600: '#00C853',
           700: '#00993d',
           800: '#006628',
           900: '#003314',
@@ -57,12 +58,16 @@ export default {
           '100%': { transform: 'scale(1)', borderRadius: '20px' },
         },
         'pulse-glow': {
-          '0%,100%': { boxShadow: '0 0 24px rgba(0,255,102,0.25)' },
-          '50%': { boxShadow: '0 0 40px rgba(0,255,102,0.45)' },
+          '0%,100%': { boxShadow: '0 0 24px rgba(0,255,136,0.25)' },
+          '50%': { boxShadow: '0 0 40px rgba(0,255,136,0.45)' },
         },
         'fade-up': {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'border-pulse': {
+          '0%,100%': { borderColor: 'rgba(0, 255, 136, 0.15)' },
+          '50%': { borderColor: 'rgba(0, 255, 136, 0.35)' },
         },
       },
       animation: {
@@ -73,6 +78,7 @@ export default {
         'ripple': 'ripple 2.4s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
         'fade-up': 'fade-up 0.4s ease-out both',
+        'border-pulse': 'border-pulse 4s ease-in-out infinite',
       },
     },
   },

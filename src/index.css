@@ -15,7 +15,7 @@
 
   body {
     margin: 0;
-    background-color: #050806;
+    background-color: #050505;
     color: #e8f3ec;
     font-family: 'Space Grotesk', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -23,11 +23,14 @@
     overflow-x: hidden;
   }
 
-  /* Equinox is not available as a free web font; Space Grotesk is used as a
-     bold geometric sans-serif fallback, labeled via the font-equinox class. */
   .font-equinox {
     font-family: 'Space Grotesk', system-ui, sans-serif;
     letter-spacing: -0.01em;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -36,10 +39,10 @@
     background: rgba(8, 14, 11, 0.55);
     backdrop-filter: blur(18px) saturate(140%);
     -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid rgba(0, 255, 102, 0.16);
+    border: 1px solid rgba(0, 255, 136, 0.16);
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
-      inset 0 0 24px rgba(0, 255, 102, 0.05),
+      inset 0 0 24px rgba(0, 255, 136, 0.05),
       0 8px 40px rgba(0, 0, 0, 0.45);
   }
 
@@ -47,23 +50,23 @@
     background: rgba(10, 18, 14, 0.4);
     backdrop-filter: blur(14px) saturate(130%);
     -webkit-backdrop-filter: blur(14px) saturate(130%);
-    border: 1px solid rgba(0, 255, 102, 0.12);
+    border: 1px solid rgba(0, 255, 136, 0.12);
   }
 
   .glass-pill {
     background: rgba(8, 14, 11, 0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 255, 102, 0.14);
+    border: 1px solid rgba(0, 255, 136, 0.14);
   }
 
   .neon-text {
-    color: #00ff66;
-    text-shadow: 0 0 18px rgba(0, 255, 102, 0.35);
+    color: #00FF88;
+    text-shadow: 0 0 18px rgba(0, 255, 136, 0.35);
   }
 
   .neon-border-glow {
-    box-shadow: 0 0 0 1px rgba(0, 255, 102, 0.25), 0 0 24px rgba(0, 255, 102, 0.18);
+    box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.25), 0 0 24px rgba(0, 255, 136, 0.18);
   }
 }
 
@@ -72,11 +75,19 @@
     text-wrap: balance;
   }
 
-  @keyframes scan {
+  @keyframes scan-line {
     0% { top: 0%; opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
+    5% { opacity: 1; }
+    95% { opacity: 1; }
     100% { top: 100%; opacity: 0; }
+  }
+
+  .scan-line {
+    animation: scan-line 2.5s ease-in-out infinite;
+  }
+
+  .scan-glow {
+    animation: scan-line 2.5s ease-in-out infinite;
   }
 
   .liquid-btn {
@@ -85,10 +96,169 @@
   .liquid-btn:hover {
     transform: scale(1.015);
     border-radius: 24px;
-    box-shadow: 0 0 32px rgba(0, 255, 102, 0.4);
+    box-shadow: 0 0 32px rgba(0, 255, 136, 0.4);
   }
   .liquid-btn:active {
     transform: scale(0.985);
     border-radius: 18px;
   }
+
+  /* Animated border for upload zone */
+  @keyframes borderPulse {
+    0%, 100% { border-color: rgba(0, 255, 136, 0.15); }
+    50% { border-color: rgba(0, 255, 136, 0.35); }
+  }
+
+  .border-pulse {
+    animation: borderPulse 4s ease-in-out infinite;
+  }
+
+  /* Background layers (dark default) */
+  .bg-app {
+    background: #050505;
+  }
+  .glow-overlay {
+    background:
+      radial-gradient(120% 80% at 50% 18%, rgba(0, 255, 102, 0.10) 0%, rgba(0, 80, 40, 0.05) 35%, rgba(5, 8, 6, 0) 70%);
+  }
+  .vignette {
+    background: radial-gradient(100% 100% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Light theme                                                         */
+/* ------------------------------------------------------------------ */
+.light {
+  color-scheme: light;
+}
+.light body {
+  background-color: #e9edf2;
+  color: #0d1724;
+}
+
+.light .bg-app {
+  background: #e9edf2;
+}
+.light .glow-overlay {
+  background: radial-gradient(
+    120% 80% at 50% 18%,
+    rgba(0, 200, 110, 0.12) 0%,
+    rgba(0, 120, 70, 0.05) 35%,
+    rgba(5, 8, 6, 0) 70%
+  );
+}
+.light .vignette {
+  background: radial-gradient(100% 100% at 50% 50%, rgba(255, 255, 255, 0) 55%, rgba(15, 23, 42, 0.12) 100%);
+}
+
+.light .glass {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+    inset 0 0 24px rgba(0, 255, 136, 0.04),
+    0 8px 32px rgba(15, 23, 42, 0.1);
+}
+.light .glass-soft {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(15, 23, 42, 0.07);
+}
+.light .glass-pill {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.light .text-white {
+  color: #0b1622;
+}
+.light .text-white\/20 {
+  color: rgb(11 22 34 / 0.2);
+}
+.light .text-white\/30 {
+  color: rgb(11 22 34 / 0.32);
+}
+.light .text-white\/35 {
+  color: rgb(11 22 34 / 0.37);
+}
+.light .text-white\/40 {
+  color: rgb(11 22 34 / 0.42);
+}
+.light .text-white\/45 {
+  color: rgb(11 22 34 / 0.47);
+}
+.light .text-white\/50 {
+  color: rgb(11 22 34 / 0.52);
+}
+.light .text-white\/55 {
+  color: rgb(11 22 34 / 0.57);
+}
+.light .text-white\/60 {
+  color: rgb(11 22 34 / 0.62);
+}
+.light .text-white\/65 {
+  color: rgb(11 22 34 / 0.67);
+}
+.light .text-white\/70 {
+  color: rgb(11 22 34 / 0.72);
+}
+.light .text-white\/75 {
+  color: rgb(11 22 34 / 0.78);
+}
+.light .text-white\/80 {
+  color: rgb(11 22 34 / 0.84);
+}
+.light .text-white\/85 {
+  color: rgb(11 22 34 / 0.88);
+}
+.light .text-white\/90 {
+  color: rgb(11 22 34 / 0.92);
+}
+
+.light .bg-white\/5 {
+  background: rgba(15, 23, 42, 0.05);
+}
+.light .bg-white\/10 {
+  background: rgba(15, 23, 42, 0.1);
+}
+.light .bg-white\/20 {
+  background: rgba(15, 23, 42, 0.2);
+}
+.light .bg-white\/\[0\.03\] {
+  background: rgba(15, 23, 42, 0.04);
+}
+.light .bg-white\/\[0\.04\] {
+  background: rgba(15, 23, 42, 0.05);
+}
+.light .bg-white\/\[0\.06\] {
+  background: rgba(15, 23, 42, 0.07);
+}
+.light .bg-white\/\[0\.07\] {
+  background: rgba(15, 23, 42, 0.08);
+}
+.light .bg-white\/\[0\.10\] {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.light .hover\:bg-white\/5:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+.light .hover\:bg-white\/\[0\.07\]:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.light .border-white\/5 {
+  border-color: rgba(15, 23, 42, 0.07);
+}
+.light .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+.light .border-white\/15 {
+  border-color: rgba(15, 23, 42, 0.16);
+}
+.light .border-white\/20 {
+  border-color: rgba(15, 23, 42, 0.2);
+}
+.light .border-white\/25 {
+  border-color: rgba(15, 23, 42, 0.24);
 }

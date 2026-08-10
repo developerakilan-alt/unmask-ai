@@ -21,3 +21,11 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+backend/data/
+backend/venv/
+backend/checkpoints/
+backend/tests/reports/
+**/__pycache__/
+*.pyc
+*.tsbuildinfo

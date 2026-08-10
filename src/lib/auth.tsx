@@ -9,6 +9,7 @@ interface AuthState {
   configured: boolean;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -48,6 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
+  const signInWithGoogle: AuthState['signInWithGoogle'] = async () => {
+    if (!isSupabaseConfigured) return { error: 'Authentication is not configured.' };
+    const { error } = await getSupabase().auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    return { error: error?.message ?? null };
+  };
+
   const signOut: AuthState['signOut'] = async () => {
     if (!isSupabaseConfigured) return;
     await getSupabase().auth.signOut();
@@ -62,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         configured: isSupabaseConfigured,
         signUp,
         signIn,
+        signInWithGoogle,
         signOut,
       }}
     >

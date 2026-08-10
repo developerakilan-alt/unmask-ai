@@ -3,7 +3,13 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-export const isSupabaseConfigured = Boolean(url && anonKey);
+function isValidUrl(u: string | undefined): boolean {
+  if (!u) return false;
+  if (u.includes('your-project-ref') || u.includes('your-anon-key')) return false;
+  try { return new URL(u).protocol === 'https:'; } catch { return false; }
+}
+
+export const isSupabaseConfigured = isValidUrl(url) && Boolean(anonKey && anonKey !== 'your-anon-key-here' && anonKey.length > 20);
 
 // Lazily create the client only when env vars are present, so the app never
 // crashes with "supabaseUrl is required" when env isn't loaded yet.
