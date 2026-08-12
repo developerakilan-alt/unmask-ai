@@ -32,6 +32,45 @@
   html {
     scroll-behavior: smooth;
   }
+
+  /* Lenis smooth-scroll requirements */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  /* Accessible focus states */
+  :focus-visible {
+    outline: 2px solid rgba(0, 255, 136, 0.7);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Slim themed scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(0, 255, 136, 0.35), rgba(0, 255, 136, 0.12));
+    border-radius: 999px;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 136, 0.5);
+  }
 }
 
 @layer components {
@@ -67,6 +106,84 @@
 
   .neon-border-glow {
     box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.25), 0 0 24px rgba(0, 255, 136, 0.18);
+  }
+
+  /* Liquid glass 3D nav items: tilt + sheen + border glow follow the cursor */
+  .liquid-nav {
+    position: relative;
+    transform: perspective(600px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transform-style: preserve-3d;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    will-change: transform;
+    isolation: isolate;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .liquid-nav:hover {
+    transform: perspective(600px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.04);
+  }
+
+  .liquid-nav:active {
+    transform: perspective(600px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(0.97);
+  }
+
+  /* cursor-following liquid sheen */
+  .liquid-nav::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(120% 100% at var(--mx, 50%) var(--my, 50%), rgba(0, 255, 136, 0.22), rgba(255, 255, 255, 0.05) 45%, transparent 72%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .liquid-nav:hover::before {
+    opacity: 1;
+  }
+
+  /* cursor-following glowing border */
+  .liquid-nav::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(90px 60px at var(--mx, 50%) var(--my, 50%), rgba(0, 255, 136, 0.6), transparent 75%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .liquid-nav:hover::after {
+    opacity: 1;
+  }
+
+  .liquid-nav-active {
+    color: #00ff88;
+    text-shadow: 0 0 14px rgba(0, 255, 136, 0.4);
+  }
+
+  .liquid-nav-active::before {
+    opacity: 0.45;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .liquid-nav {
+      transition: none;
+      transform: none;
+    }
+    .liquid-nav::before,
+    .liquid-nav::after {
+      opacity: 0;
+    }
   }
 }
 
@@ -111,6 +228,16 @@
 
   .border-pulse {
     animation: borderPulse 4s ease-in-out infinite;
+  }
+
+  /* Marquee */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 36s linear infinite;
+    will-change: transform;
   }
 
   /* Background layers (dark default) */
@@ -261,4 +388,28 @@
 }
 .light .border-white\/25 {
   border-color: rgba(15, 23, 42, 0.24);
+}
+
+.light .text-danger {
+  color: #d92b2b;
+}
+.light .neural-mesh {
+  opacity: 0.12;
+}
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion                                                      */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-marquee {
+    animation: none !important;
+  }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Download, ShieldCheck, ShieldAlert, Activity, Layers, ScanLine, Sparkles, Gauge, Fingerprint, Eye, Grid3x3, FileText, ChevronDown, ChevronUp, ImageIcon, Flag, Link2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, ShieldCheck, ShieldAlert, Activity, Layers, ScanLine, Sparkles, Gauge, Fingerprint, Eye, Grid3x3, FileText, ChevronDown, ChevronUp, ImageIcon, Flag, Link2, FileDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { createShare } from '../api';
@@ -52,6 +52,7 @@ interface AnalysisResult {
   debug?: DebugInfo;
   scanId?: string;
   forensics?: Forensics;
+  sourceUrl?: string;
 }
 
 interface ResultPageProps {
@@ -325,6 +326,160 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     doc.save(`unmask-ai-report-${reportId}.pdf`);
   };
 
+  const downloadCSV = () => {
+    const rows: string[][] = [
+      ['field', 'value'],
+      ['report_id', reportId],
+      ['classification', result.classification],
+      ['verdict', result.verdict],
+      ['ai_percent', String(result.aiPercent)],
+      ['real_percent', String(result.realPercent)],
+      ['confidence_percent', String(result.confidence)],
+      ['model', result.modelUsed || ''],
+      ['processing_time_ms', String(result.processingTimeMs ?? '')],
+      ['scan_id', result.scanId || ''],
+      ['source', result.sourceUrl || ''],
+    ];
+    (result.indicators || []).forEach((ind) =>
+      rows.push([`indicator:${ind.label}`, `${ind.value} (ai_likelihood ${ind.aiLikelihood})`]),
+    );
+    if (result.forensics?.noise) {
+      rows.push(['noise_level', String(result.forensics.noise.noise_level)]);
+      rows.push(['sharpness', String(result.forensics.noise.sharpness)]);
+    }
+    if (result.forensics?.colour) {
+      rows.push(['saturation', String(result.forensics.colour.saturation)]);
+      rows.push(['value', String(result.forensics.colour.value)]);
+    }
+    if (result.forensics?.exif) {
+      Object.entries(result.forensics.exif.tags || {}).forEach(([k, v]) => rows.push([`exif:${k}`, v]));
+    }
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `unmask-ai-report-${reportId}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadPNG = async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 760;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const badge = isAI ? '#ff3b3b' : isUncertain ? '#fbbf24' : '#00ff88';
+    const dim = 'rgba(255,255,255,0.55)';
+
+    ctx.fillStyle = '#0a0f0c';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = badge;
+    ctx.fillRect(0, 0, canvas.width, 8);
+
+    // Title
+    ctx.fillStyle = badge;
+    ctx.font = '700 46px "Space Grotesk", sans-serif';
+    ctx.fillText('UNMASK AI', 48, 88);
+    ctx.fillStyle = dim;
+    ctx.font = '16px "Space Grotesk", sans-serif';
+    ctx.fillText(reportId, 48, 118);
+    const dateStr = new Date().toLocaleString();
+    ctx.fillText(dateStr, canvas.width - 48 - ctx.measureText(dateStr).width, 118);
+
+    // Verdict badge
+    ctx.fillStyle = badge;
+    ctx.font = '700 52px "Space Grotesk", sans-serif';
+    const verdictText = isAI ? 'AI-GENERATED' : isUncertain ? 'UNCERTAIN' : 'REAL IMAGE';
+    ctx.fillText(verdictText, 48, 210);
+
+    // Score
+    ctx.fillStyle = dim;
+    ctx.font = '15px "Space Grotesk", sans-serif';
+    ctx.fillText('AI LIKELIHOOD', 48, 258);
+    ctx.fillStyle = badge;
+    ctx.font = '700 44px "Space Grotesk", sans-serif';
+    ctx.fillText(`${result.aiPercent}%`, 48, 306);
+
+    // Confidence bar
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(48, 326, 640, 14);
+    ctx.fillStyle = badge;
+    ctx.fillRect(48, 326, 640 * (result.aiPercent / 100), 14);
+
+    ctx.fillStyle = dim;
+    ctx.font = '14px "Space Grotesk", sans-serif';
+    ctx.fillText(`Confidence: ${result.confidence}%`, 48, 366);
+    ctx.fillText(`Model: ${result.modelUsed || 'Unmask AI'}`, 48, 392);
+
+    // Image (right side)
+    if (previewUrl) {
+      try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const i = new Image();
+          i.onload = () => resolve(i);
+          i.onerror = () => reject(new Error('img'));
+          i.src = previewUrl;
+        });
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(700, 150, 452, 340, 16);
+        ctx.clip();
+        ctx.drawImage(img, 700, 150, 452, 340);
+        ctx.restore();
+        ctx.strokeStyle = badge;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(700, 150, 452, 340, 16);
+        ctx.stroke();
+      } catch {
+        /* skip */
+      }
+    }
+
+    // Indicators
+    ctx.fillStyle = badge;
+    ctx.font = '700 22px "Space Grotesk", sans-serif';
+    ctx.fillText('KEY INDICATORS', 48, 440);
+    let y = 474;
+    (result.indicators || []).slice(0, 8).forEach((ind, i) => {
+      if (i % 2 === 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        ctx.fillRect(48, y - 20, 1104, 34);
+      }
+      const high = ind.aiLikelihood >= 0.5;
+      ctx.fillStyle = high ? badge : '#00ff88';
+      ctx.font = '600 18px "Space Grotesk", sans-serif';
+      ctx.fillText(ind.label, 64, y);
+      ctx.fillStyle = dim;
+      ctx.font = '15px "Space Grotesk", sans-serif';
+      ctx.fillText(ind.value, 620, y);
+      ctx.fillStyle = high ? badge : '#00ff88';
+      ctx.font = '700 14px "Space Grotesk", sans-serif';
+      ctx.fillText(high ? 'AI' : 'REAL', 1060, y);
+      y += 44;
+    });
+
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '13px "Space Grotesk", sans-serif';
+    ctx.fillText('Results are indicative — not to be used as sole evidence.', 48, canvas.height - 32);
+    ctx.textAlign = 'right';
+    ctx.fillText('unmask-ai.app', canvas.width - 48, canvas.height - 32);
+    ctx.textAlign = 'left';
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `unmask-ai-report-${reportId}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
+
   const shareLink = async () => {
     if (!result.scanId) {
       push('info', 'No scan record yet', 'Log in to save scans and generate share links.');
@@ -374,19 +529,44 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
 
             {/* Verdict badge */}
             <div className="mt-5 text-center">
-              <div className={`inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 ${
-                isAI ? 'bg-danger/15 border border-danger/30' : isUncertain ? 'bg-amber-400/15 border border-amber-400/30' : 'bg-neon/15 border border-neon/30'
-              }`}>
-                {isAI ? (
-                  <ShieldAlert className="h-5 w-5 text-danger" />
-                ) : isUncertain ? (
-                  <Activity className="h-5 w-5 text-amber-400" />
-                ) : (
-                  <ShieldCheck className="h-5 w-5 text-neon" />
-                )}
-                <span className={`text-lg font-bold ${isAI ? 'text-danger' : isUncertain ? 'text-amber-400' : 'text-neon'}`}>
-                  {isAI ? 'AI-Generated' : isUncertain ? 'Uncertain' : 'Real Image'}
-                </span>
+              <div className="relative inline-flex items-center justify-center">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-4 animate-spin-slow rounded-full border border-dashed opacity-60"
+                  style={{
+                    borderColor: isAI
+                      ? 'rgba(255,59,59,0.4)'
+                      : isUncertain
+                        ? 'rgba(251,191,36,0.4)'
+                        : 'rgba(0,255,136,0.4)',
+                  }}
+                />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -top-1 -right-2 h-2 w-2 rounded-full"
+                  style={{
+                    background: isAI ? '#ff3b3b' : isUncertain ? '#fbbf24' : '#00ff88',
+                    boxShadow: isAI
+                      ? '0 0 10px rgba(255,59,59,0.9)'
+                      : isUncertain
+                        ? '0 0 10px rgba(251,191,36,0.9)'
+                        : '0 0 10px rgba(0,255,136,0.9)',
+                  }}
+                />
+                <div className={`relative inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 ${
+                  isAI ? 'bg-danger/15 border border-danger/30' : isUncertain ? 'bg-amber-400/15 border border-amber-400/30' : 'bg-neon/15 border border-neon/30'
+                }`}>
+                  {isAI ? (
+                    <ShieldAlert className="h-5 w-5 text-danger" />
+                  ) : isUncertain ? (
+                    <Activity className="h-5 w-5 text-amber-400" />
+                  ) : (
+                    <ShieldCheck className="h-5 w-5 text-neon" />
+                  )}
+                  <span className={`text-lg font-bold ${isAI ? 'text-danger' : isUncertain ? 'text-amber-400' : 'text-neon'}`}>
+                    {isAI ? 'AI-Generated' : isUncertain ? 'Uncertain' : 'Real Image'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -710,7 +890,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
 
           {/* Actions */}
           <div className="px-5 pb-5 sm:px-7">
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 onClick={onBack}
                 className="flex items-center justify-center gap-2 rounded-xl border border-white/10 py-3 px-4 text-sm font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
@@ -724,6 +904,22 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
               >
                 <Download className="h-4 w-4" />
                 <span className="hidden sm:inline">Download</span> PDF
+              </button>
+              <button
+                onClick={downloadPNG}
+                title="Export report as PNG image"
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 py-3 px-3 text-sm font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <ImageIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">PNG</span>
+              </button>
+              <button
+                onClick={downloadCSV}
+                title="Export report as CSV data"
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 py-3 px-3 text-sm font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <FileDown className="h-4 w-4" />
+                <span className="hidden sm:inline">CSV</span>
               </button>
               <button
                 onClick={onNew}

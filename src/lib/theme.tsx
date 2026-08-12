@@ -14,7 +14,11 @@ function initialTheme(): Theme {
   } catch {
     /* ignore */
   }
-  return 'dark';
+  try {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  } catch {
+    return 'dark';
+  }
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

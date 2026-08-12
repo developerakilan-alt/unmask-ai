@@ -1,4 +1,5 @@
 import { AnimatedSection } from './AnimatedSection';
+import TiltCard from './TiltCard';
 import { Star, Quote } from 'lucide-react';
 
 const TESTIMONIALS = [
@@ -48,7 +49,7 @@ export default function Testimonials() {
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TESTIMONIALS.map((t, i) => (
             <AnimatedSection key={t.name} delay={i * 100}>
-              <div className="glass group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(0,255,102,0.1)] hover:-translate-y-1 h-full flex flex-col">
+              <TiltCard glow className="glass group relative h-full overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(0,255,102,0.1)]">
                 <div className="absolute inset-0 bg-gradient-to-br from-neon/[0.03] to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                 <div className="relative flex flex-col h-full">
                   <Quote className="h-8 w-8 text-neon/20 mb-3" />
@@ -64,7 +65,7 @@ export default function Testimonials() {
                     <p className="text-xs text-neon/50">{t.org}</p>
                   </div>
                 </div>
-              </div>
+              </TiltCard>
             </AnimatedSection>
           ))}
         </div>

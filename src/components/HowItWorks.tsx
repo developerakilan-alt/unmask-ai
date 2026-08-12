@@ -1,5 +1,5 @@
 import { AnimatedSection } from './AnimatedSection';
-import { UploadCloud, ScanLine, ShieldCheck, FileDown, ArrowDown } from 'lucide-react';
+import { UploadCloud, ScanLine, ShieldCheck, FileDown, Share2, ArrowDown } from 'lucide-react';
 
 const STEPS = [
   {
@@ -26,6 +26,12 @@ const STEPS = [
     desc: 'Save a detailed forensic report with heatmap and metadata.',
     num: '04',
   },
+  {
+    icon: Share2,
+    title: 'Share & Verify',
+    desc: 'Generate a shareable link or report ID for review and collaboration.',
+    num: '05',
+  },
 ];
 
 export default function HowItWorks() {
@@ -45,7 +51,7 @@ export default function HowItWorks() {
           {/* Connecting line */}
           <div className="absolute left-1/2 top-0 bottom-0 hidden w-px -translate-x-1/2 bg-gradient-to-b from-neon/30 via-neon/10 to-transparent sm:block" />
 
-          <div className="space-y-8 sm:space-y-0 sm:grid sm:grid-cols-4 sm:gap-4">
+          <div className="space-y-8 sm:space-y-0 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
             {STEPS.map((step, i) => (
               <AnimatedSection key={step.title} delay={i * 150}>
                 <div className="relative flex flex-col items-center text-center">

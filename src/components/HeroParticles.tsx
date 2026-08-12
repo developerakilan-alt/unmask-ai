@@ -19,15 +19,15 @@ export default function HeroParticles() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId: number;
+    let animId = 0;
     const particles: Particle[] = [];
-    const PARTICLE_COUNT = 55;
-    const LINK_DIST = 130;
+    const PARTICLE_COUNT = 36;
+    const LINK_DIST = 110;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth * devicePixelRatio;
       canvas.height = canvas.offsetHeight * devicePixelRatio;
-      ctx.scale(devicePixelRatio, devicePixelRatio);
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
     };
     resize();
     window.addEventListener('resize', resize);
@@ -50,6 +50,8 @@ export default function HeroParticles() {
     }
 
     const animate = () => {
+      if (!visible) return;
+
       ctx.clearRect(0, 0, w(), h());
 
       for (const p of particles) {
@@ -96,10 +98,26 @@ export default function HeroParticles() {
       animId = requestAnimationFrame(animate);
     };
 
+    // Only animate while the hero is on screen; stop when scrolled past so the
+    // canvas never competes with page scrolling.
+    let visible = true;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) {
+          cancelAnimationFrame(animId);
+          animId = requestAnimationFrame(animate);
+        }
+      },
+      { rootMargin: '120px 0px' },
+    );
+    io.observe(canvas);
+
     animate();
 
     return () => {
       cancelAnimationFrame(animId);
+      io.disconnect();
       window.removeEventListener('resize', resize);
     };
   }, []);

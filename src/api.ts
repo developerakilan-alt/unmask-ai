@@ -171,11 +171,18 @@ async function apiFetch<T = Record<string, any>>(path: string, init: RequestInit
   if (key) headers.set("Authorization", `Bearer ${key}`);
   else if (id) headers.set("X-Client-Id", id);
 
+  // Never let a request hang indefinitely — a stuck connection would leave
+  // the analyzing screen "pending" forever.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, { ...init, headers });
+    response = await fetch(`${API_BASE}${path}`, { ...init, headers, signal: controller.signal });
   } catch {
     throw new ApiError(0, "Backend unreachable. Is the server running on port 8000?");
+  } finally {
+    clearTimeout(timeout);
   }
 
   let body: Record<string, any> | null = null;

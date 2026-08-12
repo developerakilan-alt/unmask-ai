@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { type AnalysisResult } from './api';
 import { parseHash, type Route } from './lib/router';
+import { SmoothScroll } from './lib/smooth';
+import { compressImage } from './lib/image';
 
 import LiquidBackground from './components/LiquidBackground';
 import Navbar from './components/Navbar';
@@ -22,27 +24,45 @@ import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import ImageEditor from './components/ImageEditor';
 import BatchPanel from './components/BatchPanel';
-import Dashboard from './components/Dashboard';
-import DocsPage from './components/DocsPage';
-import PlaygroundPage from './components/PlaygroundPage';
-import StatusPage from './components/StatusPage';
-import PrivacyPage from './components/PrivacyPage';
-import TermsPage from './components/TermsPage';
-import ShareView from './components/ShareView';
+import ScrollProgress from './components/ScrollProgress';
+import CommandPalette from './components/CommandPalette';
+import NotFoundPage from './components/NotFoundPage';
 import ReportModal from './components/ReportModal';
 import GDPRConsent from './components/GDPRConsent';
 
+// Route pages are lazy-loaded so the landing page ships first.
+const ShareView = lazy(() => import('./components/ShareView'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const DocsPage = lazy(() => import('./components/DocsPage'));
+const PlaygroundPage = lazy(() => import('./components/PlaygroundPage'));
+const StatusPage = lazy(() => import('./components/StatusPage'));
+const PrivacyPage = lazy(() => import('./components/PrivacyPage'));
+const TermsPage = lazy(() => import('./components/TermsPage'));
+
 type Flow = 'home' | 'analyzing' | 'result';
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center px-4">
+      <div className="glass flex items-center gap-3 rounded-2xl px-5 py-4">
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-neon/40 border-t-neon" />
+        <p className="text-sm text-white/60">Loading…</p>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [route, setRoute] = useState<Route | null>(() => parseHash());
   const [flow, setFlow] = useState<Flow>('home');
   const [file, setFile] = useState<File | null>(null);
+  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
     const onHash = () => {
@@ -54,31 +74,68 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
 
-  const handleFiles = useCallback(
-    (files: FileList | null) => {
-      if (!files || files.length === 0) return;
-      const f = files[0];
-      const okType = /image\/(jpeg|jpg|png|webp)/i.test(f.type);
-      const okExt = /\.(jpe?g|png|webp)$/i.test(f.name);
+  const handleFile = useCallback(
+    (file: File) => {
+      const okType = /image\/(jpeg|jpg|png|webp)/i.test(file.type);
+      const okExt = /\.(jpe?g|png|webp)$/i.test(file.name);
       if (!okType && !okExt) return;
-      setFile(f);
+      setFile(file);
+      setSourceUrl(null);
       setResult(null);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(URL.createObjectURL(f));
+      setPreviewUrl(URL.createObjectURL(file));
     },
     [previewUrl],
   );
 
-  const startAnalysis = () => {
+  const handleFiles = useCallback(
+    (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      handleFile(files[0]);
+    },
+    [handleFile],
+  );
+
+  const startAnalysis = useCallback(async () => {
     if (!file) return;
+    const opt = await compressImage(file);
+    setFile(opt.file);
+    if (opt.compressed) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(URL.createObjectURL(opt.file));
+    }
     setFlow('analyzing');
     window.scrollTo(0, 0);
-  };
+  }, [file, previewUrl]);
+
+  const startUrlAnalysis = useCallback(
+    (url: string) => {
+      setFile(null);
+      setSourceUrl(url);
+      setResult(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+      setFlow('analyzing');
+      window.scrollTo(0, 0);
+    },
+    [previewUrl],
+  );
 
   const onAnalyzed = (res: AnalysisResult) => {
     setResult(res);
@@ -90,6 +147,7 @@ export default function App() {
 
   const newImage = () => {
     setFile(null);
+    setSourceUrl(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setResult(null);
@@ -98,15 +156,13 @@ export default function App() {
 
   const removeFile = () => {
     setFile(null);
+    setSourceUrl(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
   };
 
   const applyEdited = (edited: File) => {
-    setFile(edited);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(edited));
-    setResult(null);
+    handleFile(edited);
     setEditing(false);
   };
 
@@ -115,74 +171,97 @@ export default function App() {
   return (
     <div className="relative min-h-screen overflow-hidden font-equinox">
       <LiquidBackground />
-      <div className="relative z-10">
-        <Navbar onAuthOpen={() => setAuthOpen(true)} />
+      <ScrollProgress />
+      <SmoothScroll>
+        <div className="relative z-10">
+          <Navbar onAuthOpen={() => setAuthOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
 
-        {route?.name === 'share' ? (
-          <ShareView key={route.shareId} shareId={route.shareId || ''} />
-        ) : route?.name === 'dashboard' ? (
-          <Dashboard />
-        ) : route?.name === 'docs' ? (
-          <DocsPage />
-        ) : route?.name === 'playground' ? (
-          <PlaygroundPage />
-        ) : route?.name === 'status' ? (
-          <StatusPage />
-        ) : route?.name === 'privacy' ? (
-          <PrivacyPage />
-        ) : route?.name === 'terms' ? (
-          <TermsPage />
-        ) : onStatic ? null : (
-          <>
-            {flow === 'home' && (
-              <>
-                <UploadZone
-                  file={file}
+          {route?.name === 'share' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <ShareView key={route.shareId} shareId={route.shareId || ''} />
+            </Suspense>
+          ) : route?.name === 'dashboard' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <Dashboard />
+            </Suspense>
+          ) : route?.name === 'docs' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <DocsPage />
+            </Suspense>
+          ) : route?.name === 'playground' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <PlaygroundPage />
+            </Suspense>
+          ) : route?.name === 'status' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <StatusPage />
+            </Suspense>
+          ) : route?.name === 'privacy' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <PrivacyPage />
+            </Suspense>
+          ) : route?.name === 'terms' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <TermsPage />
+            </Suspense>
+          ) : route?.name === 'notfound' ? (
+            <NotFoundPage />
+          ) : onStatic ? null : (
+            <>
+              {flow === 'home' && (
+                <>
+                  <UploadZone
+                    file={file}
+                    previewUrl={previewUrl}
+                    onFiles={handleFiles}
+                    onFile={handleFile}
+                    onAnalyze={startAnalysis}
+                    onRemove={removeFile}
+                    onEdit={() => setEditing(true)}
+                    onUrl={startUrlAnalysis}
+                  />
+                  <section className="relative z-10 mx-auto w-full max-w-[620px] px-4 pb-10">
+                    <BatchPanel />
+                  </section>
+                  <Statistics />
+                  <HowItWorks />
+                  <DetectionMethods />
+                  <BeforeAfterDemo />
+                  <WhatCanYouCheck />
+                  <WhyChooseUs />
+                  <Testimonials />
+                  <SupportedModels />
+                  <APIPreview />
+                  <ResearchSection />
+                </>
+              )}
+
+              {flow === 'analyzing' && (
+                <AnalyzingPage
                   previewUrl={previewUrl}
-                  onFiles={handleFiles}
-                  onAnalyze={startAnalysis}
-                  onRemove={removeFile}
-                  onEdit={() => setEditing(true)}
+                  file={file}
+                  sourceUrl={sourceUrl}
+                  onDone={onAnalyzed}
+                  onCancel={reset}
                 />
-                <section className="relative z-10 mx-auto w-full max-w-[620px] px-4 pb-10">
-                  <BatchPanel />
-                </section>
-                <Statistics />
-                <HowItWorks />
-                <DetectionMethods />
-                <BeforeAfterDemo />
-                <WhatCanYouCheck />
-                <WhyChooseUs />
-                <Testimonials />
-                <SupportedModels />
-                <APIPreview />
-                <ResearchSection />
-              </>
-            )}
+              )}
 
-            {flow === 'analyzing' && (
-              <AnalyzingPage
-                previewUrl={previewUrl}
-                file={file}
-                onDone={onAnalyzed}
-                onCancel={reset}
-              />
-            )}
+              {flow === 'result' && result && (
+                <ResultPage
+                  result={result}
+                  previewUrl={previewUrl}
+                  onNew={newImage}
+                  onBack={reset}
+                  onReport={() => setReportOpen(true)}
+                />
+              )}
+            </>
+          )}
 
-            {flow === 'result' && result && (
-              <ResultPage
-                result={result}
-                previewUrl={previewUrl}
-                onNew={newImage}
-                onBack={reset}
-                onReport={() => setReportOpen(true)}
-              />
-            )}
-          </>
-        )}
-
-        <Footer />
-      </div>
+          <Footer />
+          <GDPRConsent />
+        </div>
+      </SmoothScroll>
 
       <AnimatePresence>
         {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
@@ -194,7 +273,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <GDPRConsent />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

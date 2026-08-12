@@ -10,7 +10,8 @@ export type RouteName =
   | 'playground'
   | 'status'
   | 'privacy'
-  | 'terms';
+  | 'terms'
+  | 'notfound';
 
 export interface Route {
   name: RouteName;
@@ -24,7 +25,7 @@ export function parseHash(): Route | null {
   if (seg === 'share' && param) return { name: 'share', shareId: param };
   const known: RouteName[] = ['dashboard', 'docs', 'playground', 'status', 'privacy', 'terms'];
   if (known.includes(seg as RouteName)) return { name: seg as RouteName };
-  return null;
+  return { name: 'notfound' };
 }
 
 export function navigate(route: RouteName | string): void {

@@ -1,19 +1,35 @@
-import { useRef, useState, useCallback } from 'react';
-import { Upload, X, FileImage, ArrowRight, Crop } from 'lucide-react';
+import { lazy, Suspense, useRef, useState, useCallback } from 'react';
+import { Upload, X, FileImage, ArrowRight, Crop, Link2, Camera, Wand2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HeroParticles from './HeroParticles';
+import CameraCapture from './CameraCapture';
+import DemoGallery from './DemoGallery';
+
+// Three.js is ~600KB — load it only when the hero is actually shown.
+const NeuralMesh = lazy(() => import('./NeuralMesh'));
 
 interface UploadZoneProps {
   file: File | null;
   previewUrl: string | null;
   onFiles: (files: FileList | null) => void;
+  onFile: (file: File) => void;
   onAnalyze: () => void;
   onRemove: () => void;
   onEdit?: () => void;
+  onUrl: (url: string) => void;
 }
 
-export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRemove, onEdit }: UploadZoneProps) {
+function isValidImageUrl(value: string): boolean {
+  return /^https?:\/\/.+\..+/.test(value.trim());
+}
+
+export default function UploadZone({ file, previewUrl, onFiles, onFile, onAnalyze, onRemove, onEdit, onUrl }: UploadZoneProps) {
   const [dragging, setDragging] = useState(false);
+  const [urlOpen, setUrlOpen] = useState(false);
+  const [urlValue, setUrlValue] = useState('');
+  const [urlBusy, setUrlBusy] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDrop = useCallback(
@@ -25,11 +41,33 @@ export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRem
     [onFiles],
   );
 
+  const submitUrl = () => {
+    if (!isValidImageUrl(urlValue) || urlBusy) return;
+    setUrlBusy(true);
+    // Let the button state settle, then hand off to the backend URL analyzer.
+    setTimeout(() => {
+      onUrl(urlValue.trim());
+      setUrlOpen(false);
+      setUrlValue('');
+      setUrlBusy(false);
+    }, 120);
+  };
+
+  const quickActions = [
+    { icon: Upload, label: 'Upload', onClick: () => inputRef.current?.click() },
+    { icon: Link2, label: 'From URL', onClick: () => setUrlOpen((o) => !o) },
+    { icon: Camera, label: 'Webcam', onClick: () => setCameraOpen(true) },
+    { icon: Wand2, label: 'Samples', onClick: () => setDemoOpen(true) },
+  ];
+
   return (
     <>
       {/* Hero Section */}
       <section className="relative px-4 pb-10 pt-16 text-center sm:pt-24">
         <HeroParticles />
+        <Suspense fallback={null}>
+          <NeuralMesh className="neural-mesh pointer-events-none absolute inset-0 opacity-[0.3]" />
+        </Suspense>
         <div className="relative z-10 mx-auto max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -51,7 +89,7 @@ export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRem
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-balance text-5xl font-bold leading-[1.05] tracking-tight text-white sm:text-7xl"
           >
-            Unmask AI
+            Unmask <span className="neon-text animate-pulse-glow rounded-lg px-2">AI</span>
           </motion.h1>
 
           <motion.h2
@@ -75,13 +113,57 @@ export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRem
           >
             Upload any image and our forensic engine will analyze EXIF metadata, sensor noise patterns, texture signatures, and more to detect AI-generated content.
           </motion.p>
-
-
         </div>
       </section>
 
+      {/* Quick action modes */}
+      <section className="relative z-10 px-4">
+        <div className="mx-auto flex max-w-[550px] flex-wrap items-center justify-center gap-2">
+          {quickActions.map((a) => (
+            <button
+              key={a.label}
+              onClick={a.onClick}
+              className="glass-pill flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white/65 transition-all hover:border-neon/30 hover:text-white"
+            >
+              <a.icon className="h-3.5 w-3.5 text-neon" /> {a.label}
+            </button>
+          ))}
+        </div>
+
+        <AnimatePresence>
+          {urlOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mx-auto mt-3 flex max-w-[550px] items-center gap-2 rounded-2xl border border-neon/20 bg-neon/5 p-2">
+                <Link2 className="ml-2 h-4 w-4 shrink-0 text-neon" />
+                <input
+                  value={urlValue}
+                  onChange={(e) => setUrlValue(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submitUrl()}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                  aria-label="Image URL"
+                />
+                <button
+                  onClick={submitUrl}
+                  disabled={!isValidImageUrl(urlValue) || urlBusy}
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl bg-neon px-4 py-2 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,102,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {urlBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRight className="h-3.5 w-3.5" />}
+                  Analyze
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+
       {/* Upload Area */}
-      <section className="relative z-10 px-4 pb-24">
+      <section className="relative z-10 px-4 pb-24 pt-6">
         <div className="mx-auto w-full max-w-[550px]">
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
@@ -111,18 +193,8 @@ export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRem
                 : 'inset 0 1px 0 0 rgba(255, 255, 255, 0.04), inset 0 0 24px rgba(0, 255, 102, 0.05), 0 8px 40px rgba(0, 0, 0, 0.45)',
             } as React.CSSProperties}
           >
-            {/* Animated border glow */}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-3xl"
-              style={{
-                background: 'transparent',
-                boxShadow: 'inset 0 0 60px rgba(0, 255, 102, 0.03)',
-              }}
-            />
-            {/* Pulsing border animation */}
-            <div className="pointer-events-none absolute inset-0 rounded-3xl border border-neon/10" style={{
-              animation: 'borderPulse 4s ease-in-out infinite',
-            }} />
+            <div className="pointer-events-none absolute inset-0 rounded-3xl" style={{ boxShadow: 'inset 0 0 60px rgba(0, 255, 102, 0.03)' }} />
+            <div className="pointer-events-none absolute inset-0 rounded-3xl border border-neon/10 border-pulse" />
 
             <input
               ref={inputRef}
@@ -188,15 +260,8 @@ export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRem
                   <div className="flex gap-1.5">
                     <button
                       type="button"
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onEdit?.();
-                      }}
+                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); onEdit?.(); }}
                       aria-label="Edit image"
                       className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white/45 transition-colors hover:bg-white/5 hover:text-neon"
                     >
@@ -204,15 +269,8 @@ export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRem
                     </button>
                     <button
                       type="button"
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onRemove();
-                      }}
+                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); onRemove(); }}
                       aria-label="Remove file"
                       className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white/45 transition-colors hover:bg-white/5 hover:text-white"
                     >
@@ -241,6 +299,16 @@ export default function UploadZone({ file, previewUrl, onFiles, onAnalyze, onRem
           </motion.button>
         </div>
       </section>
+
+      <AnimatePresence>
+        {cameraOpen && (
+          <CameraCapture
+            onCapture={onFile}
+            onClose={() => setCameraOpen(false)}
+          />
+        )}
+        {demoOpen && <DemoGallery onFile={onFile} onClose={() => setDemoOpen(false)} />}
+      </AnimatePresence>
     </>
   );
 }

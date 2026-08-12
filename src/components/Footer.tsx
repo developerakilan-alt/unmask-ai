@@ -105,7 +105,12 @@ export default function Footer() {
             <span className="text-neon/60">TensorFlow</span>,{' '}
             <span className="text-neon/60">OpenCV</span>
           </p>
-          <p className="text-sm font-semibold text-neon/70">Developed by Akilan</p>
+          <p className="text-sm font-semibold text-neon/70 flex items-center gap-2">
+            Developed by Akilan
+            <span className="glass-pill rounded-full px-2 py-0.5 text-[10px] font-medium text-white/40" title="App version">
+              v2.1.0
+            </span>
+          </p>
         </div>
       </div>
     </footer>

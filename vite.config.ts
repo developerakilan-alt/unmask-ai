@@ -33,4 +33,15 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ['three'],
+          pdf: ['jspdf'],
+          dom2image: ['html2canvas'],
+        },
+      },
+    },
+  },
 });

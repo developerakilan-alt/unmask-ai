@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FileImage, Grid3x3, Activity, Layers, Eye, Sparkles, Fingerprint, CheckCircle2, Loader2 } from 'lucide-react';
+import { FileImage, Grid3x3, Activity, Layers, Eye, Sparkles, Fingerprint, CheckCircle2, Loader2, Link2 } from 'lucide-react';
 import type { AnalysisResult } from '../api';
-import { analyzeImage } from '../api';
+import { analyzeImage, analyzeUrl } from '../api';
 
 const SCAN_STEPS = [
   { icon: FileImage, label: 'Uploading image to backend', time: 800 },
@@ -20,11 +20,12 @@ function delay(ms: number) {
 interface AnalyzingPageProps {
   previewUrl: string | null;
   file: File | null;
+  sourceUrl?: string | null;
   onDone: (r: AnalysisResult) => void;
   onCancel: () => void;
 }
 
-export default function AnalyzingPage({ file, onDone, onCancel }: AnalyzingPageProps) {
+export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onCancel }: AnalyzingPageProps) {
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -34,17 +35,27 @@ export default function AnalyzingPage({ file, onDone, onCancel }: AnalyzingPageP
 
     const run = async () => {
       try {
-        if (!file) {
+        if (!file && !sourceUrl) {
           setError('No image to analyze');
           return;
         }
 
         const totalSteps = SCAN_STEPS.length;
-        // Animate the scan steps visually while the real API call happens in parallel
-        const apiPromise = analyzeImage(file);
+        // Animate the scan steps visually while the real API call happens in parallel.
+        // Track its outcome so a fast failure (e.g. backend down) shows an error
+        // immediately instead of after the full animation.
+        let apiError: unknown = null;
+        const apiPromise = sourceUrl
+          ? analyzeUrl(sourceUrl)
+          : analyzeImage(file!).catch((e) => { apiError = e; throw e; });
+        apiPromise.catch(() => {});
 
         for (let i = 0; i < totalSteps; i++) {
           if (cancelled) return;
+          if (apiError) {
+            setError(apiError instanceof Error ? apiError.message : 'Analysis failed. Is the backend running?');
+            return;
+          }
           setStep(i);
           const stepDuration = SCAN_STEPS[i].time;
           const progressStart = (i / totalSteps) * 100;
@@ -52,6 +63,7 @@ export default function AnalyzingPage({ file, onDone, onCancel }: AnalyzingPageP
           const startTime = Date.now();
           while (Date.now() - startTime < stepDuration) {
             if (cancelled) return;
+            if (apiError) break;
             const t = Math.min(1, (Date.now() - startTime) / stepDuration);
             setProgress(progressStart + (progressEnd - progressStart) * t);
             await new Promise((r) => requestAnimationFrame(r));
@@ -61,8 +73,13 @@ export default function AnalyzingPage({ file, onDone, onCancel }: AnalyzingPageP
 
         if (cancelled) return;
 
-        // Wait for the API result (if it hasn't already finished)
-        const res = await apiPromise;
+        // Hard stop so the screen can never stay "pending" forever.
+        const res = await Promise.race([
+          apiPromise,
+          delay(45000).then(() => {
+            throw new Error('Analysis timed out. The backend may be busy — please try again.');
+          }),
+        ]);
         if (cancelled) return;
 
         setProgress(100);
@@ -86,6 +103,13 @@ export default function AnalyzingPage({ file, onDone, onCancel }: AnalyzingPageP
         <div className="glass rounded-3xl px-6 py-10 sm:px-10">
           <div className="flex flex-col items-center">
             <div className="relative h-56 w-56 overflow-hidden rounded-2xl border-2 border-neon/40 bg-black/40 shadow-[0_0_40px_rgba(0,255,102,0.25)]">
+              {previewUrl ? (
+                <img src={previewUrl} alt="analyzing" className="absolute inset-0 h-full w-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 grid place-items-center">
+                  <Link2 className="h-12 w-12 text-neon/40" strokeWidth={1.5} />
+                </div>
+              )}
               {/* Animated scan grid */}
               <div className="absolute inset-0 grid grid-cols-8 grid-rows-8 gap-px opacity-20">
                 {Array.from({ length: 64 }).map((_, i) => (
