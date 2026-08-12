@@ -18,8 +18,6 @@ import APIPreview from './components/APIPreview';
 import ResearchSection from './components/ResearchSection';
 import BeforeAfterDemo from './components/BeforeAfterDemo';
 import WhatCanYouCheck from './components/WhatCanYouCheck';
-import AnalyzingPage from './components/AnalyzingPage';
-import ResultPage from './components/ResultPage';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import ImageEditor from './components/ImageEditor';
@@ -31,6 +29,8 @@ import ReportModal from './components/ReportModal';
 import GDPRConsent from './components/GDPRConsent';
 
 // Route pages are lazy-loaded so the landing page ships first.
+const AnalyzingPage = lazy(() => import('./components/AnalyzingPage'));
+const ResultPage = lazy(() => import('./components/ResultPage'));
 const ShareView = lazy(() => import('./components/ShareView'));
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const DocsPage = lazy(() => import('./components/DocsPage'));
@@ -237,23 +237,27 @@ export default function App() {
               )}
 
               {flow === 'analyzing' && (
-                <AnalyzingPage
-                  previewUrl={previewUrl}
-                  file={file}
-                  sourceUrl={sourceUrl}
-                  onDone={onAnalyzed}
-                  onCancel={reset}
-                />
+                <Suspense fallback={<RouteFallback />}>
+                  <AnalyzingPage
+                    previewUrl={previewUrl}
+                    file={file}
+                    sourceUrl={sourceUrl}
+                    onDone={onAnalyzed}
+                    onCancel={reset}
+                  />
+                </Suspense>
               )}
 
               {flow === 'result' && result && (
-                <ResultPage
-                  result={result}
-                  previewUrl={previewUrl}
-                  onNew={newImage}
-                  onBack={reset}
-                  onReport={() => setReportOpen(true)}
-                />
+                <Suspense fallback={<RouteFallback />}>
+                  <ResultPage
+                    result={result}
+                    previewUrl={previewUrl}
+                    onNew={newImage}
+                    onBack={reset}
+                    onReport={() => setReportOpen(true)}
+                  />
+                </Suspense>
               )}
             </>
           )}

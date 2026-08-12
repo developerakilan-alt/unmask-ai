@@ -9,12 +9,11 @@ interface Props {
 }
 
 /**
- * Section reveal with a hard guarantee that content always becomes visible.
+ * Section reveal that NEVER hides its content.
  *
- * The element starts visually hidden and fades in as it scrolls into view.
- * If the scroll trigger ever fails to fire (IntersectionObserver quirks,
- * smooth-scroll wrappers, very tall pages), a short safety timer forces the
- * content visible anyway, so no section can stay blank for long.
+ * Content is always rendered at full opacity, so nothing can appear missing
+ * or delayed. Only a subtle slide animation is applied when the section
+ * scrolls into view (or after a short safety timer), purely as polish.
  */
 export function AnimatedSection({ children, className = '', delay = 0, direction = 'up' }: Props) {
   const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -52,8 +51,8 @@ function Reveal({ children, className, initial, delay }: Props & { initial: { op
     <motion.div
       ref={ref}
       className={className}
-      initial={initial}
-      animate={visible ? { opacity: 1, x: 0, y: 0 } : initial}
+      initial={{ ...initial, opacity: 1 }}
+      animate={visible ? { opacity: 1, x: 0, y: 0 } : { ...initial, opacity: 1 }}
       transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
