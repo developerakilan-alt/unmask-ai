@@ -1,4 +1,4 @@
-import { type ReactNode, useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 
 interface Props {
@@ -9,10 +9,12 @@ interface Props {
 }
 
 /**
- * Scroll-triggered section reveal. Renders content immediately and fully
- * visible when the environment cannot reliably drive a scroll reveal
- * (reduced-motion preference or no IntersectionObserver support), so
- * sections are never left invisible after mount.
+ * Section reveal with a hard guarantee that content always becomes visible.
+ *
+ * The element starts visually hidden and fades in as it scrolls into view.
+ * If the scroll trigger ever fails to fire (IntersectionObserver quirks,
+ * smooth-scroll wrappers, very tall pages), a short safety timer forces the
+ * content visible anyway, so no section can stay blank for long.
  */
 export function AnimatedSection({ children, className = '', delay = 0, direction = 'up' }: Props) {
   const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -37,13 +39,21 @@ export function AnimatedSection({ children, className = '', delay = 0, direction
 function Reveal({ children, className, initial, delay }: Props & { initial: { opacity: number; x: number; y: number } }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-10% 0px -10% 0px' });
+  const [forced, setForced] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setForced(true), 900);
+    return () => clearTimeout(t);
+  }, []);
+
+  const visible = inView || forced;
 
   return (
     <motion.div
       ref={ref}
       className={className}
       initial={initial}
-      animate={inView ? { opacity: 1, x: 0, y: 0 } : initial}
+      animate={visible ? { opacity: 1, x: 0, y: 0 } : initial}
       transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
