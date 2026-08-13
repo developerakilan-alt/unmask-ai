@@ -182,7 +182,7 @@ export default function App() {
       <LiquidBackground />
       <ScrollProgress />
       <SmoothScroll>
-        <div className="relative z-10">
+        <div className="relative z-10 lg:px-44 xl:px-56">
           <Navbar
             onAuthOpen={() => setAuthOpen(true)}
             onOpenPalette={() => setPaletteOpen(true)}
