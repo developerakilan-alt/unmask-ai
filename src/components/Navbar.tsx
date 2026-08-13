@@ -1,32 +1,38 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
-import { LogOut, Menu, X, Github, LayoutDashboard, BookOpen, TerminalSquare, HeartPulse, Search } from 'lucide-react';
+import { LogOut, Menu, X, Github, LayoutDashboard, BookOpen, TerminalSquare, HeartPulse, Search, FlaskConical, Clapperboard, ShieldCheck, Languages, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { navigate } from '../lib/router';
+import { useI18n } from '../lib/i18n';
 import ThemeToggle from './ThemeToggle';
 import { LiquidNavButton, LiquidNavLink } from './LiquidNavButton';
 
 interface NavbarProps {
   onAuthOpen: () => void;
   onOpenPalette: () => void;
+  onOpenPricing: () => void;
 }
 
 const ANCHOR_LINKS = [
-  { label: 'Features', href: 'features' },
-  { label: 'Technology', href: 'technology' },
-  { label: 'API', href: 'api' },
-  { label: 'About', href: 'about' },
+  { labelKey: 'nav.features', href: 'features' },
+  { labelKey: 'nav.technology', href: 'technology' },
+  { labelKey: 'nav.api', href: 'api' },
+  { labelKey: 'nav.about', href: 'about' },
 ];
 
 const ROUTE_LINKS = [
-  { label: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' },
-  { label: 'API Docs', icon: BookOpen, route: 'docs' },
-  { label: 'Playground', icon: TerminalSquare, route: 'playground' },
-  { label: 'Status', icon: HeartPulse, route: 'status' },
+  { labelKey: 'nav.dashboard', icon: LayoutDashboard, route: 'dashboard' },
+  { labelKey: 'nav.compare', icon: FlaskConical, route: 'compare' },
+  { labelKey: 'nav.video', icon: Clapperboard, route: 'video' },
+  { labelKey: 'nav.source', icon: ShieldCheck, route: 'source' },
+  { labelKey: 'nav.apiDocs', icon: BookOpen, route: 'docs' },
+  { labelKey: 'nav.playground', icon: TerminalSquare, route: 'playground' },
+  { labelKey: 'nav.status', icon: HeartPulse, route: 'status' },
 ];
 
-export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
+export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: NavbarProps) {
   const { user, signOut } = useAuth();
+  const { t, lang, setLang } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('');
@@ -79,14 +85,14 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
         <div className="hidden items-center gap-1 lg:flex">
           {ANCHOR_LINKS.map((link) => (
             <LiquidNavLink
-              key={link.label}
+              key={link.labelKey}
               href={`#${link.href}`}
               active={activeSection === link.href}
               className={`px-3 py-2 text-sm transition-colors rounded-lg hover:bg-white/5 ${
                 activeSection === link.href ? 'font-semibold text-neon' : 'text-white/60 hover:text-white'
               }`}
             >
-              {link.label}
+              {t(link.labelKey)}
             </LiquidNavLink>
           ))}
           <span className="mx-1 h-5 w-px bg-white/10" />
@@ -97,7 +103,7 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
               className="flex items-center gap-1.5 px-3 py-2 text-sm text-white/60 transition-colors hover:text-white rounded-lg hover:bg-white/5"
             >
               <link.icon className="h-3.5 w-3.5" />
-              {link.label}
+              {t(link.labelKey)}
             </LiquidNavButton>
           ))}
         </div>
@@ -114,6 +120,21 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
           </LiquidNavButton>
 
           <ThemeToggle />
+          <LiquidNavButton
+            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+            className="flex h-9 items-center gap-1.5 rounded-xl border border-white/10 px-2.5 text-xs text-white/50 transition-colors hover:bg-white/5 hover:text-white"
+            title={t('nav.language')}
+          >
+            <Languages className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{lang === 'en' ? 'ES' : 'EN'}</span>
+          </LiquidNavButton>
+          <LiquidNavButton
+            onClick={onOpenPricing}
+            className="flex items-center gap-1.5 rounded-xl bg-neon px-3.5 py-2 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,102,0.4)]"
+          >
+            <Zap className="h-3.5 w-3.5" />
+            {t('nav.upgrade')}
+          </LiquidNavButton>
           {user ? (
             <>
               <span className="hidden text-sm text-white/60 lg:inline">{user.email}</span>
@@ -122,7 +143,7 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
                 className="glass-pill flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
               >
                 <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Sign Out</span>
+                <span className="hidden sm:inline">{t('nav.signout')}</span>
               </LiquidNavButton>
             </>
           ) : (
@@ -131,13 +152,13 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
                 onClick={onAuthOpen}
                 className="px-2 text-sm text-white/70 transition-colors hover:text-white sm:px-3"
               >
-                Login
+                {t('nav.login')}
               </LiquidNavButton>
               <LiquidNavButton
                 onClick={onAuthOpen}
                 className="glass-pill rounded-xl px-4 py-2 text-sm font-semibold text-neon transition-colors hover:text-neon-100"
               >
-                Sign Up
+                {t('nav.signup')}
               </LiquidNavButton>
             </>
           )}
@@ -182,7 +203,7 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-bold text-white">Menu</p>
+                <p className="text-sm font-bold text-white">{t('nav.menu')}</p>
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-white/5 hover:text-white"
@@ -192,7 +213,7 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
                 </button>
               </div>
 
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">Pages</p>
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">{t('nav.pages')}</p>
               {ROUTE_LINKS.map((link) => (
                 <button
                   key={link.route}
@@ -200,22 +221,32 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
                   className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
                 >
                   <link.icon className="h-4 w-4 text-neon" />
-                  {link.label}
+                  {t(link.labelKey)}
                 </button>
               ))}
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  onOpenPricing();
+                }}
+                className="flex items-center gap-3 rounded-xl bg-neon/10 px-3 py-3 text-sm font-semibold text-neon transition-colors hover:bg-neon/20"
+              >
+                <Zap className="h-4 w-4" />
+                {t('nav.upgrade')}
+              </button>
 
               <div className="my-2 h-px bg-white/10" />
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">On this page</p>
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">{t('nav.onThisPage')}</p>
               {ANCHOR_LINKS.map((link) => (
                 <a
-                  key={link.label}
+                  key={link.labelKey}
                   href={`#${link.href}`}
                   onClick={() => setMobileOpen(false)}
                   className={`rounded-xl px-3 py-3 text-sm transition-colors hover:bg-white/5 ${
                     activeSection === link.href ? 'font-semibold text-neon' : 'text-white/70 hover:text-white'
                   }`}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </a>
               ))}
 
@@ -227,7 +258,7 @@ export default function Navbar({ onAuthOpen, onOpenPalette }: NavbarProps) {
                 }}
                 className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
               >
-                <Search className="h-4 w-4 text-neon" /> Search…
+                <Search className="h-4 w-4 text-neon" /> {t('nav.search')}…
               </button>
             </motion.div>
           </motion.div>

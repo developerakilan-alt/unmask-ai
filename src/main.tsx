@@ -5,6 +5,7 @@ import App from './App.tsx';
 import { AuthProvider } from './lib/auth.tsx';
 import { ThemeProvider } from './lib/theme.tsx';
 import { ToastProvider } from './lib/toast.tsx';
+import { LanguageProvider } from './lib/i18n.tsx';
 import './index.css';
 
 registerSW({ immediate: true });
@@ -13,9 +14,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <ThemeProvider>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
+        <LanguageProvider>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </AuthProvider>
   </StrictMode>

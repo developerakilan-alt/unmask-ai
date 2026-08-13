@@ -17,6 +17,7 @@ import ipaddress
 import logging
 import socket
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -449,6 +450,173 @@ async def analyze_url(request: Request, body: UrlRequest):
 
     payload = await _run_analysis(request, resp.content, filename=body.url)
     payload["source_url"] = body.url
+    return JSONResponse(content=payload)
+
+
+# ---------------------------------------------------------------------------
+# Video analysis endpoint
+# ---------------------------------------------------------------------------
+MAX_VIDEO_BYTES = 200 * 1024 * 1024
+MAX_VIDEO_FRAMES = 8
+
+
+@app.post("/api/v1/analyze-video")
+async def analyze_video(request: Request, file: UploadFile = File(...)):
+    """Analyse a video by sampling frames and running the image detector on each.
+
+    The endpoint aggregates per-frame verdicts into an overall report
+    (majority vote of classifications, mean AI likelihood, worst-frame
+    confidence). If the detector is unavailable it returns HTTP 503 with
+    ``debug.processing_success: false`` — it never guesses REAL/AI.
+    """
+    if file.content_type and not file.content_type.startswith("video/"):
+        raise HTTPException(status_code=400, detail="File must be a video.")
+
+    video_bytes = await file.read()
+    if len(video_bytes) == 0:
+        raise HTTPException(status_code=400, detail="Empty file.")
+    if len(video_bytes) > MAX_VIDEO_BYTES:
+        raise HTTPException(status_code=413, detail="Video too large (max 200 MB).")
+
+    _enforce_limits(request)
+    try:
+        import cv2
+        import numpy as np
+
+        tmp_path = Path(tempfile.gettempdir()) / f"vid_{store.new_id('vid')}_{int(time.time())}.tmp"
+        try:
+            tmp_path.write_bytes(video_bytes)
+            cap = cv2.VideoCapture(str(tmp_path))
+            if not cap.isOpened():
+                raise HTTPException(status_code=400, detail="Could not decode video.")
+
+            total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+            fps = cap.get(cv2.CAP_PROP_FPS) or 0
+            duration = (total / fps) if fps else None
+            n = min(MAX_VIDEO_FRAMES, total) if total > 0 else MAX_VIDEO_FRAMES
+
+            frames_bgr: list[np.ndarray] = []
+            for i in range(n):
+                if total > 0:
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, round((i * (total - 1)) / (n - 1)) if n > 1 else 0)
+                ok, frame = cap.read()
+                if ok and frame is not None and frame.size > 0:
+                    frames_bgr.append(frame)
+            cap.release()
+
+            if not frames_bgr:
+                raise HTTPException(status_code=400, detail="No frames could be extracted from the video.")
+
+            detector = get_detector()
+            frames_bytes = [cv2.imencode(".jpg", fr)[1].tobytes() for fr in frames_bgr]
+            results = []
+            for fb in frames_bytes:
+                try:
+                    res = detector.analyse(fb, filename=file.filename or "")
+                    results.append(res)
+                except Exception as exc:  # noqa: BLE001
+                    log.warning("Frame analysis failed: %s", exc)
+
+            if not results:
+                raise DetectionUnavailable("No frames could be analysed.")
+
+            weights = {"AI_GENERATED": 2, "UNCERTAIN": 0, "REAL": -2}
+            score = sum(weights.get(r.classification, 0) for r in results)
+            if score > 0:
+                classification = "AI_GENERATED"
+            elif score < 0:
+                classification = "REAL"
+            else:
+                classification = "UNCERTAIN"
+            verdict = {"AI_GENERATED": "ai", "REAL": "real", "UNCERTAIN": "uncertain"}[classification]
+
+            ai_percent = round(sum(r.ai_percent for r in results) / len(results), 2)
+            real_percent = round(sum(r.real_percent for r in results) / len(results), 2)
+            confidence = round(max(r.confidence for r in results), 2)
+            heatmap = results[0].heatmap_base64
+            first = results[0]
+            payload = _result_payload(first, detector)
+            payload["classification"] = classification
+            payload["verdict"] = verdict
+            payload["ai_percent"] = ai_percent
+            payload["real_percent"] = real_percent
+            payload["confidence"] = confidence
+            payload["heatmap"] = heatmap
+            payload["scan_id"] = store.new_id("scan")
+            payload["video"] = {
+                "frames_sampled": len(results),
+                "frame_count": total or None,
+                "duration_seconds": duration,
+                "per_frame": [
+                    {"index": idx, "classification": r.classification, "ai_percent": r.ai_percent, "confidence": r.confidence}
+                    for idx, r in enumerate(results)
+                ],
+            }
+        finally:
+            if tmp_path.exists():
+                tmp_path.unlink(missing_ok=True)
+    except HTTPException:
+        raise
+    except DetectionUnavailable as exc:
+        log.error("Detection unavailable (video): %s", exc)
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "Detection unavailable",
+                "classification": "UNCERTAIN",
+                "verdict": "uncertain",
+                "debug": {
+                    "prediction": "UNCERTAIN",
+                    "confidence": None,
+                    "model": get_detector().model_name,
+                    "processing_success": False,
+                    "error": str(exc),
+                },
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        log.exception("Video analysis failed")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Detection unavailable",
+                "classification": "UNCERTAIN",
+                "verdict": "uncertain",
+                "debug": {
+                    "prediction": "UNCERTAIN",
+                    "confidence": None,
+                    "model": get_detector().model_name,
+                    "processing_success": False,
+                    "error": f"{type(exc).__name__}: {exc}",
+                },
+            },
+        )
+
+    _consume_quota(request)
+    payload["forensics"] = extract_forensics(frames_bytes[0])
+    key, _ = _resolve_client(request)
+    store.add_scan(
+        {
+            "id": payload["scan_id"],
+            "key": key,
+            "filename": file.filename or "",
+            "created_at": time.time(),
+            "classification": payload["classification"],
+            "verdict": payload["verdict"],
+            "ai_percent": payload["ai_percent"],
+            "real_percent": payload["real_percent"],
+            "confidence": payload["confidence"],
+            "indicators": payload["indicators"],
+            "feature_scores": payload.get("feature_scores"),
+            "metadata": payload.get("metadata"),
+            "model": (payload.get("debug") or {}).get("model"),
+            "processing_time_ms": (payload.get("metadata") or {}).get("processing_time_ms"),
+            "heatmap": payload.get("heatmap"),
+            "forensics": payload["forensics"],
+        }
+    )
+    store.record_scan_metric()
+    _schedule_webhooks(key, payload)
     return JSONResponse(content=payload)
 
 

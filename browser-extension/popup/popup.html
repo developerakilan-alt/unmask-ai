@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unmask AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="brand">
+    <span class="logo">UNMASK AI</span>
+    <span class="tag">image forensics</span>
+  </header>
+
+  <div class="field">
+    <input id="url" type="text" placeholder="https://example.com/image.png" spellcheck="false" autocomplete="off">
+    <button id="analyze" type="button">Analyze</button>
+  </div>
+
+  <div id="result" class="state hidden"></div>
+
+  <footer class="hint">Tip: right-click any image on a page and choose "Unmask image".</footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

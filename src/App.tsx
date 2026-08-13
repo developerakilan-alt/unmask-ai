@@ -4,6 +4,7 @@ import { type AnalysisResult } from './api';
 import { parseHash, type Route } from './lib/router';
 import { SmoothScroll } from './lib/smooth';
 import { compressImage } from './lib/image';
+import { saveResult } from './lib/history';
 
 import LiquidBackground from './components/LiquidBackground';
 import Navbar from './components/Navbar';
@@ -38,6 +39,10 @@ const PlaygroundPage = lazy(() => import('./components/PlaygroundPage'));
 const StatusPage = lazy(() => import('./components/StatusPage'));
 const PrivacyPage = lazy(() => import('./components/PrivacyPage'));
 const TermsPage = lazy(() => import('./components/TermsPage'));
+const ComparePanel = lazy(() => import('./components/ComparePanel'));
+const VideoAnalyzer = lazy(() => import('./components/VideoAnalyzer'));
+const SourceChecker = lazy(() => import('./components/SourceChecker'));
+const PricingModal = lazy(() => import('./components/PricingModal'));
 
 type Flow = 'home' | 'analyzing' | 'result';
 
@@ -63,6 +68,7 @@ export default function App() {
   const [editing, setEditing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
 
   useEffect(() => {
     const onHash = () => {
@@ -141,6 +147,7 @@ export default function App() {
     setResult(res);
     setFlow('result');
     window.scrollTo(0, 0);
+    saveResult(res);
   };
 
   const reset = () => setFlow('home');
@@ -166,7 +173,9 @@ export default function App() {
     setEditing(false);
   };
 
-  const onStatic = route && ['dashboard', 'docs', 'playground', 'status', 'privacy', 'terms'].includes(route.name);
+  const onStatic =
+    route &&
+    ['dashboard', 'docs', 'playground', 'status', 'privacy', 'terms', 'compare', 'video', 'source'].includes(route.name);
 
   return (
     <div className="relative min-h-screen overflow-hidden font-equinox">
@@ -174,7 +183,11 @@ export default function App() {
       <ScrollProgress />
       <SmoothScroll>
         <div className="relative z-10">
-          <Navbar onAuthOpen={() => setAuthOpen(true)} onOpenPalette={() => setPaletteOpen(true)} />
+          <Navbar
+            onAuthOpen={() => setAuthOpen(true)}
+            onOpenPalette={() => setPaletteOpen(true)}
+            onOpenPricing={() => setPricingOpen(true)}
+          />
 
           {route?.name === 'share' ? (
             <Suspense fallback={<RouteFallback />}>
@@ -203,6 +216,18 @@ export default function App() {
           ) : route?.name === 'terms' ? (
             <Suspense fallback={<RouteFallback />}>
               <TermsPage />
+            </Suspense>
+          ) : route?.name === 'compare' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <ComparePanel />
+            </Suspense>
+          ) : route?.name === 'video' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <VideoAnalyzer />
+            </Suspense>
+          ) : route?.name === 'source' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <SourceChecker />
             </Suspense>
           ) : route?.name === 'notfound' ? (
             <NotFoundPage />
@@ -274,6 +299,11 @@ export default function App() {
         )}
         {reportOpen && (
           <ReportModal scanId={result?.scanId} onClose={() => setReportOpen(false)} />
+        )}
+        {pricingOpen && (
+          <Suspense fallback={null}>
+            <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />
+          </Suspense>
         )}
       </AnimatePresence>
 

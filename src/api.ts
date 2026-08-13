@@ -90,6 +90,7 @@ export interface AnalysisResult {
   scanId?: string;
   forensics?: Forensics;
   sourceUrl?: string;
+  local?: boolean;
 }
 
 export interface ScanRecord {
@@ -236,6 +237,20 @@ export async function analyzeImage(file: File, apiKey?: string): Promise<Analysi
   return mapResult(body as BackendResult);
 }
 
+/**
+ * Analyze an image with the full backend model, falling back to the
+ * on-device Quick Scan when the backend is unreachable so scans never
+ * hard-fail just because the server is down.
+ */
+export async function analyzeImageWithFallback(file: File, apiKey?: string): Promise<AnalysisResult> {
+  try {
+    return await analyzeImage(file, apiKey);
+  } catch {
+    const { localDetectImage } = await import("./lib/localDetect");
+    return localDetectImage(file);
+  }
+}
+
 /** Analyze an image fetched from a public URL. */
 export async function analyzeUrl(url: string, apiKey?: string): Promise<AnalysisResult> {
   const body = await apiFetch(
@@ -377,3 +392,153 @@ export async function getStats(): Promise<StatsInfo> {
 export async function getHealth(): Promise<HealthInfo> {
   return apiFetch<HealthInfo>("/health");
 }
+
+// ---------------------------------------------------------------------------
+// Source credibility checker (client-side, CORS-proxied)
+// ---------------------------------------------------------------------------
+
+export interface SourceReport {
+  url: string;
+  title: string | null;
+  description: string | null;
+  siteName: string | null;
+  imageUrl: string | null;
+  rawHtmlSnippet: string | null;
+  result?: AnalysisResult;
+  error?: string;
+}
+
+const ALLORIGINS = "https://api.allorigins.win/raw?url=";
+const WESERV = "https://images.weserv.nl/?url=";
+
+function ogMeta(html: string, prop: string): string | null {
+  const patterns = [
+    new RegExp(`<meta[^>]*property=["']og:${prop}["'][^>]*content=["']([^"']+)["']`, 'i'),
+    new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:${prop}["']`, 'i'),
+    new RegExp(`<meta[^>]*name=["']twitter:${prop}["'][^>]*content=["']([^"']+)["']`, 'i'),
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (m && m[1]) return decodeEntities(m[1]);
+  }
+  return null;
+}
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+/** Fetch a remote page through the allorigins CORS proxy and extract metadata. */
+export async function fetchSourceReport(url: string): Promise<SourceReport> {
+  const clean = url.trim();
+  if (!/^https?:\/\//i.test(clean)) {
+    throw new ApiError(400, 'Enter a full URL starting with http(s)://');
+  }
+  const proxied = `${ALLORIGINS}${encodeURIComponent(clean)}`;
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 20000);
+  let html: string;
+  try {
+    const res = await fetch(proxied, { signal: controller.signal });
+    html = await res.text();
+  } catch {
+    throw new ApiError(0, 'Could not reach that page from the browser. Check the URL and try again.');
+  } finally {
+    clearTimeout(t);
+  }
+  if (!html || html.length < 50) {
+    throw new ApiError(0, 'That page returned no readable content.');
+  }
+
+  const title = html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() || ogMeta(html, 'title');
+  const description = ogMeta(html, 'description');
+  const siteName = ogMeta(html, 'site_name');
+  let imageUrl = ogMeta(html, 'image');
+  if (imageUrl && /^\/\//.test(imageUrl)) imageUrl = `https:${imageUrl}`;
+  else if (imageUrl && /^\//.test(imageUrl)) imageUrl = new URL(imageUrl, clean).toString();
+
+  return {
+    url: clean,
+    title: title || null,
+    description: description || null,
+    siteName: siteName || null,
+    imageUrl: imageUrl || null,
+    rawHtmlSnippet: html.slice(0, 300),
+  };
+}
+
+/** Proxy an image through the weserv cache so the browser can read pixels. */
+export async function fetchImageViaProxy(imageUrl: string): Promise<Blob> {
+  const proxied = `${WESERV}${encodeURIComponent(imageUrl)}&w=800`;
+  const res = await fetch(proxied);
+  if (!res.ok) throw new ApiError(res.status, 'Could not fetch the image for analysis.');
+  return res.blob();
+}
+
+// ---------------------------------------------------------------------------
+// Video / frame helpers
+// ---------------------------------------------------------------------------
+
+/** Sample up to `count` frames from a video file as image blobs. */
+export function sampleVideoFrames(file: File, count = 6): Promise<Blob[]> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    video.playsInline = true;
+
+    const seekTo = (t: number) =>
+      new Promise<void>((done) => {
+        const onSeeked = () => {
+          video.removeEventListener('seeked', onSeeked);
+          done();
+        };
+        video.addEventListener('seeked', onSeeked);
+        try {
+          video.currentTime = t;
+        } catch {
+          done();
+        }
+      });
+
+    video.onloadeddata = async () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = Math.max(1, Math.round((640 / video.videoWidth) * video.videoHeight));
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const frames: Blob[] = [];
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error('Video decoding failed'));
+        return;
+      }
+      try {
+        const total = Math.min(count, 12);
+        const step = video.duration / total;
+        for (let i = 0; i < total; i++) {
+          await seekTo(step * (i + 0.5));
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.85));
+          if (blob) frames.push(blob);
+        }
+      } catch {
+        /* keep whatever frames we got */
+      }
+      URL.revokeObjectURL(url);
+      resolve(frames);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not decode this video file.'));
+    };
+    video.src = url;
+    video.load();
+  });
+}
+

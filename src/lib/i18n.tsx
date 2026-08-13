@@ -1,0 +1,275 @@
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+export type Lang = 'en' | 'es';
+
+const STORAGE_KEY = 'unmask-lang';
+
+type Dict = Record<string, string>;
+
+const en: Dict = {
+  'nav.features': 'Features',
+  'nav.technology': 'Technology',
+  'nav.api': 'API',
+  'nav.about': 'About',
+  'nav.dashboard': 'Dashboard',
+  'nav.compare': 'Compare',
+  'nav.video': 'Video',
+  'nav.source': 'Source Check',
+  'nav.apiDocs': 'API Docs',
+  'nav.playground': 'Playground',
+  'nav.status': 'Status',
+  'nav.login': 'Login',
+  'nav.signup': 'Sign Up',
+  'nav.signout': 'Sign Out',
+  'nav.upgrade': 'Pro',
+  'nav.search': 'Search',
+  'nav.menu': 'Menu',
+  'nav.pages': 'Pages',
+  'nav.onThisPage': 'On this page',
+  'nav.language': 'Language',
+  'nav.langEn': 'English',
+  'nav.langEs': 'Español',
+  'hero.eyebrow': 'AI IMAGE FORENSICS',
+  'hero.title.start': 'Real or AI?',
+  'hero.title.highlight': 'Find out in seconds.',
+  'hero.subtitle':
+    'Upload any image and Unmask AI runs pixel-level forensics — noise, EXIF, compression and GAN artifacts — to tell you if it is real or machine-made.',
+  'hero.cta.upload': 'Analyze an image',
+  'hero.cta.camera': 'Use camera',
+  'hero.cta.url': 'Paste image URL',
+  'hero.stat.scans': 'Images Scanned',
+  'hero.stat.accuracy': 'Accuracy',
+  'hero.stat.time': 'Analysis Time',
+  'hero.stat.models': 'AI Models',
+  'batch.title': 'Batch scanner',
+  'batch.subtitle': 'Analyze up to 10 images in one request',
+  'batch.add': 'Add images',
+  'batch.folder': 'Add folder',
+  'batch.import': 'Import list',
+  'batch.clear': 'Clear',
+  'batch.analyze': 'Analyze',
+  'batch.pasteHint': 'Paste URLs, one per line',
+  'how.title': 'How It Works',
+  'api.title': 'API Preview',
+  'about.title': 'Powered By Research',
+  'detection.title': 'Detection Methods',
+  'why.title': 'Why Choose Us',
+  'supported.title': 'Detection Architecture',
+  'local.warning': 'Quick Scan preview — on-device heuristics. Run the full server analysis for a high-confidence verdict.',
+  'pro.badge': 'Pro',
+  'pro.upgrade': 'Upgrade',
+  'pro.title': 'Unmask AI Pro',
+  'pro.free': 'Free',
+  'pro.pro': 'Pro',
+  'pro.month': '/mo',
+  'common.cancel': 'Cancel',
+  'common.close': 'Close',
+  'common.analyzing': 'Analyzing…',
+  'compare.title': 'Side-by-side comparison',
+  'compare.subtitle': 'Drop two images and compare how likely each one is AI-generated.',
+  'compare.dropA': 'Drop image A',
+  'compare.dropB': 'Drop image B',
+  'compare.dropHint': 'or click to browse',
+  'compare.cta': 'Compare',
+  'compare.clear': 'Clear',
+  'compare.comparing': 'Comparing…',
+  'compare.confidence': 'Confidence',
+  'compare.topIndicator': 'Top indicator',
+  'compare.aiLikelihood': 'AI likelihood',
+  'compare.failed': 'Comparison failed',
+  'video.title': 'Video analyzer',
+  'video.subtitle': 'Sample frames from a video and scan them entirely on your device.',
+  'video.drop': 'Drop a video here',
+  'video.dropHint': 'or click to browse files',
+  'video.remove': 'Remove video',
+  'video.scan': 'Scan video',
+  'video.scanning': 'Scanning…',
+  'video.note': 'On-device quick scan — frame sampling, no upload required.',
+  'video.frames': 'frames sampled',
+  'video.analyzed': 'Analysis complete',
+  'video.noFrames': 'No frames extracted',
+  'video.noFramesMsg': 'Could not decode this video — try another file.',
+  'video.error': 'Video scan failed',
+  'source.title': 'Source credibility checker',
+  'source.subtitle': 'Paste a URL and check whether its main image carries AI artifacts.',
+  'source.placeholder': 'https://example.com/article',
+  'source.analyze': 'Analyze',
+  'source.analyzing': 'Checking page…',
+  'source.analyzingImage': 'Analyzing main image…',
+  'source.site': 'Site',
+  'source.pageTitle': 'Page title',
+  'source.description': 'Description',
+  'source.mainImage': 'Main image',
+  'source.noImage': 'No main image found on this page.',
+  'source.riskHigh': 'High risk — the main image on this page appears AI-generated.',
+  'source.riskLow': 'No obvious AI signal in the main image. Cross-check the domain and claims.',
+  'source.riskUnknown': 'Could not analyze the main image on this page.',
+  'source.failed': 'Could not analyze that page',
+  'plan.current': 'Current plan',
+  'plan.downgrade': 'Downgrade',
+  'plan.upgrade': 'Upgrade',
+  'plan.contact': 'Contact',
+  'plan.free': 'Free',
+  'plan.pro': 'Pro',
+  'plan.team': 'Team',
+  'plan.activated': 'Pro activated',
+  'plan.checkoutNote': 'Checkout not wired up yet — add VITE_STRIPE_PAYMENT_LINK to enable.',
+  'verdict.ai': 'AI',
+  'verdict.real': 'Real',
+  'verdict.uncertain': 'Uncertain',
+};
+
+const es: Dict = {
+  'nav.features': 'Funciones',
+  'nav.technology': 'Tecnología',
+  'nav.api': 'API',
+  'nav.about': 'Acerca de',
+  'nav.dashboard': 'Panel',
+  'nav.compare': 'Comparar',
+  'nav.video': 'Vídeo',
+  'nav.source': 'Comprobar fuente',
+  'nav.apiDocs': 'Docs API',
+  'nav.playground': 'Zona de prueba',
+  'nav.status': 'Estado',
+  'nav.login': 'Entrar',
+  'nav.signup': 'Registrarse',
+  'nav.signout': 'Salir',
+  'nav.upgrade': 'Pro',
+  'nav.search': 'Buscar',
+  'nav.menu': 'Menú',
+  'nav.pages': 'Páginas',
+  'nav.onThisPage': 'En esta página',
+  'nav.language': 'Idioma',
+  'nav.langEn': 'English',
+  'nav.langEs': 'Español',
+  'hero.eyebrow': 'FORENSE DE IMÁGENES IA',
+  'hero.title.start': '¿Real o IA?',
+  'hero.title.highlight': 'Descúbrelo en segundos.',
+  'hero.subtitle':
+    'Sube cualquier imagen y Unmask AI ejecuta análisis a nivel de píxel — ruido, EXIF, compresión y artefactos GAN — para decirte si es real o creada por máquinas.',
+  'hero.cta.upload': 'Analizar una imagen',
+  'hero.cta.camera': 'Usar cámara',
+  'hero.cta.url': 'Pegar URL de imagen',
+  'hero.stat.scans': 'Imágenes Analizadas',
+  'hero.stat.accuracy': 'Precisión',
+  'hero.stat.time': 'Tiempo de Análisis',
+  'hero.stat.models': 'Modelos IA',
+  'batch.title': 'Escáner por lotes',
+  'batch.subtitle': 'Analiza hasta 10 imágenes en una sola petición',
+  'batch.add': 'Añadir imágenes',
+  'batch.folder': 'Añadir carpeta',
+  'batch.import': 'Importar lista',
+  'batch.clear': 'Limpiar',
+  'batch.analyze': 'Analizar',
+  'batch.pasteHint': 'Pega URLs, una por línea',
+  'how.title': 'Cómo Funciona',
+  'api.title': 'Vista Previa de la API',
+  'about.title': 'Impulsado por Investigación',
+  'detection.title': 'Métodos de Detección',
+  'why.title': 'Por Qué Elegirnos',
+  'supported.title': 'Arquitectura de Detección',
+  'local.warning': 'Vista previa del Escaneo Rápido — heurística en el dispositivo. Ejecuta el análisis completo del servidor para un veredicto de alta confianza.',
+  'pro.badge': 'Pro',
+  'pro.upgrade': 'Mejorar',
+  'pro.title': 'Unmask AI Pro',
+  'pro.free': 'Gratis',
+  'pro.pro': 'Pro',
+  'pro.month': '/mes',
+  'common.cancel': 'Cancelar',
+  'common.close': 'Cerrar',
+  'common.analyzing': 'Analizando…',
+  'compare.title': 'Comparación lado a lado',
+  'compare.subtitle': 'Sube dos imágenes y compara cuánto parece IA cada una.',
+  'compare.dropA': 'Imagen A',
+  'compare.dropB': 'Imagen B',
+  'compare.dropHint': 'o haz clic para examinar',
+  'compare.cta': 'Comparar',
+  'compare.clear': 'Limpiar',
+  'compare.comparing': 'Comparando…',
+  'compare.confidence': 'Confianza',
+  'compare.topIndicator': 'Indicador principal',
+  'compare.aiLikelihood': 'Probabilidad de IA',
+  'compare.failed': 'La comparación falló',
+  'video.title': 'Analizador de vídeo',
+  'video.subtitle': 'Extrae fotogramas de un vídeo y analízalos en tu dispositivo.',
+  'video.drop': 'Suelta un vídeo aquí',
+  'video.dropHint': 'o haz clic para examinar archivos',
+  'video.remove': 'Quitar vídeo',
+  'video.scan': 'Escanear vídeo',
+  'video.scanning': 'Escaneando…',
+  'video.note': 'Escaneo rápido en el dispositivo — muestreo de fotogramas, sin subir archivos.',
+  'video.frames': 'fotogramas analizados',
+  'video.analyzed': 'Análisis completado',
+  'video.noFrames': 'No se pudieron extraer fotogramas',
+  'video.noFramesMsg': 'No se pudo decodificar este vídeo — prueba con otro archivo.',
+  'video.error': 'Falló el análisis del vídeo',
+  'source.title': 'Comprobador de credibilidad de fuentes',
+  'source.subtitle': 'Pega una URL y comprueba si su imagen principal tiene artefactos de IA.',
+  'source.placeholder': 'https://ejemplo.com/articulo',
+  'source.analyze': 'Analizar',
+  'source.analyzing': 'Comprobando la página…',
+  'source.analyzingImage': 'Analizando la imagen principal…',
+  'source.site': 'Sitio',
+  'source.pageTitle': 'Título',
+  'source.description': 'Descripción',
+  'source.mainImage': 'Imagen principal',
+  'source.noImage': 'No se encontró ninguna imagen principal en esta página.',
+  'source.riskHigh': 'Riesgo alto — la imagen principal de esta página parece generada por IA.',
+  'source.riskLow': 'Sin señales claras de IA en la imagen principal. Verifica el dominio y sus afirmaciones.',
+  'source.riskUnknown': 'No se pudo analizar la imagen principal de esta página.',
+  'source.failed': 'No se pudo analizar esa página',
+  'plan.current': 'Plan actual',
+  'plan.downgrade': 'Degradar',
+  'plan.upgrade': 'Mejorar',
+  'plan.contact': 'Contactar',
+  'plan.free': 'Gratis',
+  'plan.pro': 'Pro',
+  'plan.team': 'Equipo',
+  'plan.activated': 'Pro activado',
+  'plan.checkoutNote': 'El pago aún no está configurado — añade VITE_STRIPE_PAYMENT_LINK para activarlo.',
+  'verdict.ai': 'IA',
+  'verdict.real': 'Real',
+  'verdict.uncertain': 'Incierto',
+};
+
+const dicts: Record<Lang, Dict> = { en, es };
+
+function initialLang(): Lang {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'es' || stored === 'en') return stored;
+  } catch {
+    /* ignore */
+  }
+  return 'en';
+}
+
+const LangContext = createContext<{ lang: Lang; setLang: (l: Lang) => void; t: (k: string) => string }>({
+  lang: 'en',
+  setLang: () => {},
+  t: (k) => k,
+});
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>(initialLang);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    try {
+      localStorage.setItem(STORAGE_KEY, lang);
+    } catch {
+      /* ignore */
+    }
+  }, [lang]);
+
+  const value = useMemo(() => {
+    const t = (k: string) => dicts[lang][k] ?? en[k] ?? k;
+    return { lang, setLang: setLangState, t };
+  }, [lang]);
+
+  return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
+}
+
+export function useI18n() {
+  return useContext(LangContext);
+}

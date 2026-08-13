@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [scans, setScans] = useState<ScanRecord[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookInfo[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyInfo[]>([]);
+  const [localOnly, setLocalOnly] = useState(false);
 
   const [expandedScan, setExpandedScan] = useState<string | null>(null);
   const [hookUrl, setHookUrl] = useState('');
@@ -57,8 +58,24 @@ export default function Dashboard() {
       setScans(s);
       setWebhooks(w);
       setApiKeys(k);
+      setLocalOnly(false);
     } catch (e) {
-      push('error', 'Failed to load dashboard', e instanceof Error ? e.message : undefined);
+      push('error', 'Backend unavailable — showing local history', e instanceof Error ? e.message : undefined);
+      const { getLocalHistory } = await import('../lib/history');
+      setScans(
+        getLocalHistory().map((h) => ({
+          id: h.id,
+          filename: h.filename,
+          created_at: h.created_at,
+          classification: h.classification,
+          verdict: (h.classification === 'AI_GENERATED' ? 'ai' : h.classification === 'UNCERTAIN' ? 'uncertain' : 'real') as 'ai' | 'real' | 'uncertain',
+          ai_percent: h.ai_percent,
+          real_percent: 100 - h.ai_percent,
+          confidence: h.confidence,
+          model: h.model,
+        })),
+      );
+      setLocalOnly(true);
     } finally {
       setLoading(false);
     }
@@ -150,6 +167,13 @@ export default function Dashboard() {
           <RefreshCw className="h-4 w-4" /> Refresh
         </button>
       </div>
+
+      {localOnly && (
+        <div className="mt-4 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs text-amber-300">
+          Backend is offline — showing history stored on this device. Scans made here won't sync to the cloud until the
+          backend is reachable again.
+        </div>
+      )}
 
       {/* Usage meter */}
       {quota && (

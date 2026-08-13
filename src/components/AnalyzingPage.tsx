@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FileImage, Grid3x3, Activity, Layers, Eye, Sparkles, Fingerprint, CheckCircle2, Loader2, Link2 } from 'lucide-react';
 import type { AnalysisResult } from '../api';
-import { analyzeImage, analyzeUrl } from '../api';
+import { analyzeImageWithFallback, analyzeUrl } from '../api';
 
 const SCAN_STEPS = [
   { icon: FileImage, label: 'Uploading image to backend', time: 800 },
@@ -45,9 +45,10 @@ export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onC
         // Track its outcome so a fast failure (e.g. backend down) shows an error
         // immediately instead of after the full animation.
         let apiError: unknown = null;
-        const apiPromise = sourceUrl
-          ? analyzeUrl(sourceUrl)
-          : analyzeImage(file!).catch((e) => { apiError = e; throw e; });
+        const apiPromise = (sourceUrl ? analyzeUrl(sourceUrl) : analyzeImageWithFallback(file!)).catch((e) => {
+          apiError = e;
+          throw e;
+        });
         apiPromise.catch(() => {});
 
         for (let i = 0; i < totalSteps; i++) {

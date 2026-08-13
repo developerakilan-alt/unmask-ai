@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Unmask AI",
+  "version": "1.0.0",
+  "description": "Detects AI-generated images on any page with a right-click context menu or URL analysis.",
+  "permissions": ["contextMenus", "activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>", "https://developerakilan-alt.github.io/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Unmask AI"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

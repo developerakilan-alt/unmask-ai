@@ -53,6 +53,7 @@ interface AnalysisResult {
   scanId?: string;
   forensics?: Forensics;
   sourceUrl?: string;
+  local?: boolean;
 }
 
 interface ResultPageProps {
@@ -582,6 +583,21 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                   too close to the decision boundary, so no verdict was forced.
                   {result.debug?.model ? ` Model: ${result.debug.model}.` : ''}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {result.local && (
+            <div className="px-5 pt-4 sm:px-7">
+              <div className="flex items-start gap-2.5 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3">
+                <Activity className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-300">Quick Scan (on-device)</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-white/50">
+                    The backend was unreachable, so this scan ran entirely in your browser. Results are heuristic
+                    estimates, capped at ~70% confidence, and may differ from the full model.
+                  </p>
+                </div>
               </div>
             </div>
           )}

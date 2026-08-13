@@ -29,3 +29,5 @@ backend/tests/reports/
 **/__pycache__/
 *.pyc
 *.tsbuildinfo
+
+Untitled-1.jsonc
