@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { useAuth } from '../lib/auth';
 import { LogOut, Menu, X, Github, LayoutDashboard, BookOpen, TerminalSquare, HeartPulse, Search, FlaskConical, Clapperboard, ShieldCheck, Languages, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -63,6 +63,24 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
   const go = (route: string) => {
     setMobileOpen(false);
     navigate(route);
+  };
+
+  const boxTilt = (e: ReactMouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / Math.max(r.width, 1);
+    const y = (e.clientY - r.top) / Math.max(r.height, 1);
+    el.style.setProperty('--mx', `${(x * 100).toFixed(2)}%`);
+    el.style.setProperty('--my', `${(y * 100).toFixed(2)}%`);
+    el.style.setProperty('--rx', `${((0.5 - y) * 9).toFixed(2)}deg`);
+    el.style.setProperty('--ry', `${((x - 0.5) * 9).toFixed(2)}deg`);
+  };
+
+  const boxTiltReset = (e: ReactMouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    el.style.setProperty('--rx', '0deg');
+    el.style.setProperty('--ry', '0deg');
   };
 
   return (
@@ -158,34 +176,56 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
         </div>
       </nav>
 
-      {/* Left side box — on-page links (fixed, top-left corner) */}
-      <div className="glass-pill fixed left-4 top-24 z-40 hidden flex-col items-stretch gap-0.5 rounded-2xl p-1.5 lg:flex">
-        {ANCHOR_LINKS.map((link) => (
-          <LiquidNavLink
-            key={link.labelKey}
-            href={`#${link.href}`}
-            active={activeSection === link.href}
-            className={`px-3 py-2 text-sm transition-colors rounded-lg hover:bg-white/5 ${
-              activeSection === link.href ? 'font-semibold text-neon' : 'text-white/60 hover:text-white'
-            }`}
-          >
-            {t(link.labelKey)}
-          </LiquidNavLink>
-        ))}
+      {/* Left side box — on-page links (fixed, aligned with upload zone) */}
+      <div className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
+        <div className="side-box-float">
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, delay: 0.35, ease: 'easeOut' }}
+          className="side-box flex flex-col items-stretch gap-0.5 p-1.5"
+          onMouseMove={boxTilt}
+          onMouseLeave={boxTiltReset}
+        >
+          {ANCHOR_LINKS.map((link) => (
+            <LiquidNavLink
+              key={link.labelKey}
+              href={`#${link.href}`}
+              active={activeSection === link.href}
+              className={`px-3 py-2 text-sm transition-colors rounded-lg hover:bg-white/5 ${
+                activeSection === link.href ? 'font-semibold text-neon' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {t(link.labelKey)}
+            </LiquidNavLink>
+          ))}
+        </motion.div>
+        </div>
       </div>
 
-      {/* Right side box — app pages, one by one (fixed, top-right corner) */}
-      <div className="glass fixed right-4 top-24 z-40 hidden w-52 flex-col gap-0.5 rounded-2xl p-2 lg:flex">
-        {ROUTE_LINKS.map((link) => (
-          <LiquidNavButton
-            key={link.route}
-            onClick={() => go(link.route)}
-            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-          >
-            <link.icon className="h-3.5 w-3.5 text-neon/80" />
-            {t(link.labelKey)}
-          </LiquidNavButton>
-        ))}
+      {/* Right side box — app pages, one by one (fixed, aligned with upload zone) */}
+      <div className="fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
+        <div className="side-box-float side-box-float-delayed">
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, delay: 0.45, ease: 'easeOut' }}
+          className="side-box flex w-52 flex-col gap-0.5 p-2"
+          onMouseMove={boxTilt}
+          onMouseLeave={boxTiltReset}
+        >
+          {ROUTE_LINKS.map((link) => (
+            <LiquidNavButton
+              key={link.route}
+              onClick={() => go(link.route)}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <link.icon className="h-3.5 w-3.5 text-neon/80" />
+              {t(link.labelKey)}
+            </LiquidNavButton>
+          ))}
+        </motion.div>
+        </div>
       </div>
 
       {/* Mobile drawer */}

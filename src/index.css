@@ -175,6 +175,85 @@
     opacity: 0.45;
   }
 
+  /* 3D morphing side nav boxes */
+  .side-box {
+    position: relative;
+    transform-style: preserve-3d;
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
+    will-change: transform;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 24px;
+    background: rgba(10, 18, 14, 0.55);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(0, 255, 136, 0.16);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .side-box:hover {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.05);
+    border-color: rgba(0, 255, 136, 0.5);
+    box-shadow: 0 0 34px rgba(0, 255, 136, 0.2), 0 0 0 1px rgba(0, 255, 136, 0.12), inset 0 0 30px rgba(0, 255, 136, 0.05);
+    animation: side-box-morph 5s ease-in-out infinite;
+  }
+
+  @keyframes side-box-morph {
+    0%, 100% { border-radius: 24px 26px 22px 28px; }
+    25% { border-radius: 28px 22px 26px 22px; }
+    50% { border-radius: 22px 28px 24px 26px; }
+    75% { border-radius: 26px 24px 28px 22px; }
+  }
+
+  @keyframes side-box-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .side-box-float {
+    animation: side-box-float 6s ease-in-out infinite;
+  }
+
+  .side-box-float-delayed {
+    animation: side-box-float 6s ease-in-out 3s infinite;
+  }
+
+  .side-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(120% 100% at var(--mx, 50%) var(--my, 50%), rgba(0, 255, 136, 0.25), rgba(255, 255, 255, 0.06) 45%, transparent 72%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+
+  .side-box:hover::before {
+    opacity: 1;
+  }
+
+  .side-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(120px 80px at var(--mx, 50%) var(--my, 50%), rgba(0, 255, 136, 0.65), transparent 75%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+
+  .side-box:hover::after {
+    opacity: 1;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .liquid-nav {
       transition: none;
@@ -183,6 +262,20 @@
     .liquid-nav::before,
     .liquid-nav::after {
       opacity: 0;
+    }
+    .side-box {
+      transition: none;
+      transform: none;
+      animation: none;
+      border-radius: 24px;
+    }
+    .side-box::before,
+    .side-box::after {
+      opacity: 0;
+    }
+    .side-box-float,
+    .side-box-float-delayed {
+      animation: none;
     }
   }
 }
