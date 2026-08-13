@@ -68,47 +68,55 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
   return (
     <header className={`sticky top-0 z-50 px-4 transition-all duration-300 sm:px-6 ${scrolled ? 'pt-2' : 'pt-5'}`}>
       <nav
-        className={`mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-3 transition-all duration-300 sm:px-6 ${
+        className={`mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-2xl px-4 py-3 transition-all duration-300 sm:px-6 ${
           scrolled ? 'glass shadow-[0_8px_40px_rgba(0,0,0,0.5)]' : 'glass-pill'
         }`}
       >
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <img src="/logo.png" alt="Unmask AI" className="h-12 w-12 rounded-xl object-contain" />
-            <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-neon/30" />
+        <div className="flex items-center gap-2.5 sm:gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <img src="/logo.png" alt="Unmask AI" className="h-12 w-12 rounded-xl object-contain" />
+              <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-neon/30" />
+            </div>
+            <button onClick={() => go('home')} className="text-lg font-bold tracking-tight text-white">
+              Unmask <span className="neon-text">AI</span>
+            </button>
           </div>
-          <button onClick={() => go('home')} className="text-lg font-bold tracking-tight text-white">
-            Unmask <span className="neon-text">AI</span>
-          </button>        </div>
 
-        {/* Desktop nav links */}
-        <div className="hidden items-center gap-1 lg:flex">
-          {ANCHOR_LINKS.map((link) => (
-            <LiquidNavLink
-              key={link.labelKey}
-              href={`#${link.href}`}
-              active={activeSection === link.href}
-              className={`px-3 py-2 text-sm transition-colors rounded-lg hover:bg-white/5 ${
-                activeSection === link.href ? 'font-semibold text-neon' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {t(link.labelKey)}
-            </LiquidNavLink>
-          ))}
-          <span className="mx-1 h-5 w-px bg-white/10" />
-          {ROUTE_LINKS.map((link) => (
-            <LiquidNavButton
-              key={link.route}
-              onClick={() => go(link.route)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-white/60 transition-colors hover:text-white rounded-lg hover:bg-white/5"
-            >
-              <link.icon className="h-3.5 w-3.5" />
-              {t(link.labelKey)}
-            </LiquidNavButton>
-          ))}
+          {/* Left box — on-page links */}
+          <div className="glass-pill hidden items-center gap-1 rounded-2xl p-1.5 lg:flex">
+            {ANCHOR_LINKS.map((link) => (
+              <LiquidNavLink
+                key={link.labelKey}
+                href={`#${link.href}`}
+                active={activeSection === link.href}
+                className={`px-3 py-2 text-sm transition-colors rounded-lg hover:bg-white/5 ${
+                  activeSection === link.href ? 'font-semibold text-neon' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                {t(link.labelKey)}
+              </LiquidNavLink>
+            ))}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-end gap-3">
+          {/* Right rectangle box — app pages, one by one */}
+          <div className="glass hidden w-52 flex-col gap-0.5 rounded-2xl p-2 lg:flex">
+            {ROUTE_LINKS.map((link) => (
+              <LiquidNavButton
+                key={link.route}
+                onClick={() => go(link.route)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <link.icon className="h-3.5 w-3.5 text-neon/80" />
+                {t(link.labelKey)}
+              </LiquidNavButton>
+            ))}
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
           <LiquidNavButton
             onClick={onOpenPalette}
             className="hidden h-9 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs text-white/40 transition-colors hover:bg-white/5 hover:text-white/70 md:flex"
@@ -181,6 +189,8 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
           >
             {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </LiquidNavButton>
+            </div>
+          </div>
         </div>
       </nav>
 
