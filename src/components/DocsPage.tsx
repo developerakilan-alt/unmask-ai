@@ -53,7 +53,7 @@ const ENDPOINTS = [
 
 function Code({ children }: { children: string }) {
   return (
-    <pre className="mt-3 overflow-x-auto rounded-xl bg-black/50 p-4 text-xs leading-relaxed text-neon-100">
+    <pre className="code-block mt-3 overflow-x-auto rounded-xl p-4 text-xs leading-relaxed text-neon-100">
       <code>{children}</code>
     </pre>
   );
@@ -105,6 +105,22 @@ export default function DocsPage() {
             <Code>{e.curl}</Code>
           </div>
         ))}
+      </div>
+
+      <div className="mt-8 rounded-2xl border border-neon/20 bg-neon/[0.04] p-5">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+          <Code2 className="h-4 w-4 text-neon" /> Embed the widget
+        </h3>
+        <p className="mt-2 text-xs text-white/50">
+          Add a hosted analyzer to any page with two lines. Detection runs on-device in a sandboxed iframe — nothing is
+          uploaded to us.
+        </p>
+        <Code>{`<script src="https://unmask-ai.app/unmask-ai/unmask-ai-widget.js"></script>
+<script>UnmaskWidget.init();</script>`}</Code>
+        <p className="mt-3 text-xs text-white/45">
+          Results arrive on your page as a <code className="text-neon">postMessage</code> with type{' '}
+          <code className="text-neon">unmask:result</code>; see <code className="text-white/70">public/unmask-ai-widget.js</code> for the payload shape.
+        </p>
       </div>
 
       <div className="mt-8 rounded-2xl border border-neon/20 bg-neon/[0.04] p-5">

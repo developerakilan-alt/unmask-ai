@@ -117,7 +117,7 @@ export default function SourceChecker() {
         <button
           onClick={analyze}
           disabled={!url.trim() || loading}
-          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-neon px-4 py-2 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,102,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-neon px-4 py-2 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(88,221,242,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ScanLine className="h-3.5 w-3.5" />}
           {loading ? t('source.analyzing') : t('source.analyze')}

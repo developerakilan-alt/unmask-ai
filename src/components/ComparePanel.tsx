@@ -53,8 +53,8 @@ function CompareDrop({
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && inputRef.current?.click()}
       className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed px-4 py-6 text-center transition-all duration-300"
       style={{
-        background: dragging ? 'rgba(0, 200, 90, 0.08)' : 'rgba(8, 14, 11, 0.45)',
-        borderColor: dragging ? 'rgba(0, 200, 90, 0.7)' : 'rgba(0, 255, 102, 0.25)',
+        background: dragging ? 'rgba(58, 196, 224, 0.08)' : 'rgba(5, 30, 55, 0.45)',
+        borderColor: dragging ? 'rgba(58, 196, 224, 0.7)' : 'rgba(88, 221, 242, 0.25)',
       }}
     >
       <input
@@ -67,7 +67,7 @@ function CompareDrop({
       />
       {preview ? (
         <div className="flex flex-col items-center">
-          <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-neon/30 bg-black/40 shadow-[0_0_20px_rgba(0,255,102,0.15)]">
+          <div className="relative h-32 w-32 overflow-hidden rounded-xl border border-neon/30 bg-black/40 shadow-[0_0_20px_rgba(88,221,242,0.15)]">
             <img src={preview} alt={file?.name || label} className="h-full w-full object-cover" />
             <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-neon/15" />
           </div>
@@ -91,7 +91,7 @@ function CompareDrop({
             onRemove();
           }}
           aria-label="Remove file"
-          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-lg bg-black/50 text-white/50 transition-colors hover:text-danger"
+          className="overlay-label absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-lg bg-black/50 transition-colors hover:text-danger"
         >
           <X className="h-4 w-4" />
         </button>
@@ -285,7 +285,7 @@ export default function ComparePanel() {
           disabled={!canCompare || running}
           className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold transition-all ${
             canCompare && !running
-              ? 'bg-gradient-to-r from-neon to-neon-600 text-black shadow-[0_0_24px_rgba(0,255,102,0.3)]'
+              ? 'bg-gradient-to-r from-neon to-neon-600 text-black shadow-[0_0_24px_rgba(88,221,242,0.3)]'
               : 'cursor-not-allowed bg-white/[0.06] text-white/30'
           }`}
         >

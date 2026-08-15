@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FileImage, Grid3x3, Activity, Layers, Eye, Sparkles, Fingerprint, CheckCircle2, Loader2, Link2 } from 'lucide-react';
 import type { AnalysisResult } from '../api';
 import { analyzeImageWithFallback, analyzeUrl } from '../api';
+import HeatmapOverlay from './HeatmapOverlay';
 
 const SCAN_STEPS = [
   { icon: FileImage, label: 'Uploading image to backend', time: 800 },
@@ -103,14 +104,16 @@ export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onC
       <div className="w-full max-w-[550px]">
         <div className="glass rounded-3xl px-6 py-10 sm:px-10">
           <div className="flex flex-col items-center">
-            <div className="relative h-56 w-56 overflow-hidden rounded-2xl border-2 border-neon/40 bg-black/40 shadow-[0_0_40px_rgba(0,255,102,0.25)]">
+            <div className="relative h-56 w-56 overflow-hidden rounded-2xl border-2 border-neon/40 bg-black/40 shadow-[0_0_40px_rgba(88,221,242,0.25)]">
               {previewUrl ? (
                 <img src={previewUrl} alt="analyzing" className="absolute inset-0 h-full w-full object-cover" />
               ) : (
                 <div className="absolute inset-0 grid place-items-center">
-                  <Link2 className="h-12 w-12 text-neon/40" strokeWidth={1.5} />
+                  <Link2 className="overlay-label-strong h-12 w-12" strokeWidth={1.5} />
                 </div>
               )}
+              {/* Live "generating" heatmap overlay builds up as the scan advances */}
+              {previewUrl && <HeatmapOverlay progress={progress} />}
               {/* Animated scan grid */}
               <div className="absolute inset-0 grid grid-cols-8 grid-rows-8 gap-px opacity-20">
                 {Array.from({ length: 64 }).map((_, i) => (
@@ -142,7 +145,7 @@ export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onC
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
               <div
                 className="h-full rounded-full bg-neon transition-all duration-200 ease-out"
-                style={{ width: `${progress}%`, boxShadow: '0 0 12px rgba(0,255,102,0.5)' }}
+                style={{ width: `${progress}%`, boxShadow: '0 0 12px rgba(88,221,242,0.5)' }}
               />
             </div>
           </div>

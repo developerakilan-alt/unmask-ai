@@ -20,6 +20,7 @@ export default function HeroParticles() {
     if (!ctx) return;
 
     let animId = 0;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const particles: Particle[] = [];
     const PARTICLE_COUNT = 36;
     const LINK_DIST = 110;
@@ -55,8 +56,13 @@ export default function HeroParticles() {
       ctx.clearRect(0, 0, w(), h());
 
       for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
+        if (reduceMotion) {
+          p.vx = 0;
+          p.vy = 0;
+        } else {
+          p.x += p.vx;
+          p.y += p.vy;
+        }
 
         if (p.x < 0) p.x = w();
         if (p.x > w()) p.x = 0;
@@ -80,7 +86,7 @@ export default function HeroParticles() {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(0, 255, 136, ${alpha})`;
+            ctx.strokeStyle = `rgba(88, 221, 242, ${alpha})`;
             ctx.lineWidth = 0.8;
             ctx.stroke();
           }
@@ -91,12 +97,20 @@ export default function HeroParticles() {
       for (const p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 136, ${p.alpha})`;
+        ctx.fillStyle = `rgba(88, 221, 242, ${p.alpha})`;
         ctx.fill();
       }
 
       animId = requestAnimationFrame(animate);
     };
+
+    if (reduceMotion) {
+      animate();
+      return () => {
+        cancelAnimationFrame(animId);
+        window.removeEventListener('resize', resize);
+      };
+    }
 
     // Only animate while the hero is on screen; stop when scrolled past so the
     // canvas never competes with page scrolling.

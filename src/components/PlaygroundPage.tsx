@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Copy, Send, TerminalSquare } from 'lucide-react';
+import { getLocalQuota } from '../lib/quota';
 
 type Preset = { label: string; method: 'GET' | 'POST' | 'DELETE'; path: string; mode: 'file' | 'url' | 'none' };
 
@@ -22,6 +23,7 @@ export default function PlaygroundPage() {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<{ status: number; body: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [offlineNote, setOfflineNote] = useState<string | null>(null);
 
   const applyPreset = (p: Preset) => {
     setMethod(p.method);
@@ -46,12 +48,16 @@ export default function PlaygroundPage() {
         headers['Content-Type'] = 'application/json';
         init = { method, headers, body: JSON.stringify({ url }) };
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${path}`, init);
-      let body: string;
-      const ct = res.headers.get('content-type') || '';
-      if (ct.includes('image')) body = `[binary image, ${(await res.arrayBuffer()).byteLength} bytes]`;
-      else body = JSON.stringify(await res.json(), null, 2).slice(0, 12000);
-      setResponse({ status: res.status, body });
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${path}`, init);
+        let body: string;
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('image')) body = `[binary image, ${(await res.arrayBuffer()).byteLength} bytes]`;
+        else body = JSON.stringify(await res.json(), null, 2).slice(0, 12000);
+        setResponse({ status: res.status, body });
+      } catch {
+        await runLocalFallback();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Request failed');
     } finally {
@@ -59,8 +65,62 @@ export default function PlaygroundPage() {
     }
   };
 
+  const runLocalFallback = async () => {
+    const { getLocalQuota, consumeLocalScan } = await import('../lib/quota');
+    if (!consumeLocalScan()) {
+      const q = getLocalQuota();
+      setError(`Anonymous offline quota exhausted (${q.limit}/day). Add an API key or try again tomorrow.`);
+      return;
+    }
+    let blob: Blob | null = null;
+    if (mode === 'file' && file) blob = file;
+    else if (mode === 'url' && url.trim()) {
+      const { fetchImageViaProxy } = await import('../api');
+      blob = await fetchImageViaProxy(url.trim());
+    }
+    if (!blob) {
+      setError('No image provided for the offline analyzer.');
+      return;
+    }
+    const { localDetectImage } = await import('../lib/localDetect');
+    const r = await localDetectImage(blob);
+    const body = JSON.stringify(
+      {
+        prediction: r.verdict,
+        classification: r.classification,
+        ai_score: r.aiPercent / 100,
+        real_score: r.realPercent / 100,
+        confidence: r.confidence / 100,
+        indicators: r.indicators,
+        metadata: {
+          model_used: r.modelUsed,
+          processing_time_ms: r.processingTimeMs,
+          local: true,
+          offline_fallback: true,
+        },
+        attribution: r.attribution,
+      },
+      null,
+      2,
+    );
+    setResponse({ status: 200, body });
+    const q = getLocalQuota();
+    push(`offline result — ${q.remaining} offline scans left today`);
+  };
+
+  const push = (message: string) => {
+    /* quiet inline notice (avoid importing the toast store for a playground) */
+    setError(null);
+    setOfflineNote(message);
+  };
+
   const copy = () => {
     if (response) navigator.clipboard?.writeText(response.body).catch(() => undefined);
+  };
+
+  const getQuotaDisplay = () => {
+    const q = getLocalQuota();
+    return `${q.remaining} / ${q.limit} today`;
   };
 
   return (
@@ -69,6 +129,17 @@ export default function PlaygroundPage() {
         <TerminalSquare className="h-6 w-6 text-neon" /> API Playground
       </h1>
       <p className="mt-2 text-sm text-white/50">Call the public API right from the browser. No account required.</p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-white/45">
+        <span className="rounded-full border border-white/10 px-2.5 py-1">
+          Offline scans: <span className="font-semibold text-neon">{getQuotaDisplay()}</span>
+        </span>
+        <span className="text-white/30">If the backend is offline, file &amp; URL analysis runs on-device (locally, never uploaded).</span>
+      </div>
+
+      {offlineNote && (
+        <div className="mt-3 rounded-xl border border-neon/30 bg-neon/10 px-4 py-3 text-xs text-neon">{offlineNote}</div>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-2">
         {PRESETS.map((p) => (
@@ -154,7 +225,7 @@ export default function PlaygroundPage() {
               <Copy className="h-3.5 w-3.5" /> Copy
             </button>
           </div>
-          <pre className="max-h-96 overflow-auto p-4 text-xs leading-relaxed text-neon-100">{response.body}</pre>
+          <pre className="code-block max-h-96 overflow-auto p-4 text-xs leading-relaxed text-neon-100">{response.body}</pre>
         </div>
       )}
     </section>

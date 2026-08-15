@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { RotateCw, Crop, Check, X, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useFocusTrap } from './ModalShell';
 
 interface ImageEditorProps {
   file: File;
@@ -148,7 +149,12 @@ export default function ImageEditor({ file, onCancel, onApply }: ImageEditorProp
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
-      className="fixed inset-0 z-[90] grid place-items-center bg-black/70 p-4 backdrop-blur-sm"
+      ref={useFocusTrap<HTMLDivElement>(true, onCancel)}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Edit image"
+      tabIndex={-1}
+      className="fixed inset-0 z-[90] grid place-items-center bg-black/70 p-4 backdrop-blur-sm outline-none"
     >
       <div className="glass w-full max-w-[560px] rounded-3xl p-6">
         <div className="mb-4 flex items-center justify-between">
@@ -187,7 +193,7 @@ export default function ImageEditor({ file, onCancel, onApply }: ImageEditorProp
             />
           )}
           {!crop && (
-            <div className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] text-white/50">
+            <div className="overlay-label pointer-events-none absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px]">
               Drag to crop
             </div>
           )}
@@ -216,7 +222,7 @@ export default function ImageEditor({ file, onCancel, onApply }: ImageEditorProp
           <button
             onClick={apply}
             disabled={busy}
-            className="liquid-btn flex items-center gap-2 rounded-xl bg-neon px-4 py-2 text-sm font-bold text-black hover:shadow-[0_0_24px_rgba(0,255,102,0.4)]"
+            className="liquid-btn flex items-center gap-2 rounded-xl bg-neon px-4 py-2 text-sm font-bold text-black hover:shadow-[0_0_24px_rgba(88,221,242,0.4)]"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
             Apply

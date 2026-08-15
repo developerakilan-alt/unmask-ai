@@ -38,7 +38,7 @@ export default function WhyChooseUs() {
         <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {FEATURES.map((feat, i) => (
             <AnimatedSection key={feat.text} delay={i * 60}>
-              <TiltCard max={5} className="glass group flex items-center gap-4 rounded-2xl p-5 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_20px_rgba(0,255,102,0.08)]">
+              <TiltCard max={5} className="glass group flex items-center gap-4 rounded-2xl p-5 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_20px_rgba(88,221,242,0.08)]">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-neon/20 bg-neon/10 transition-all group-hover:scale-110 group-hover:border-neon/40">
                   <feat.icon className="h-5 w-5 text-neon" />
                 </div>

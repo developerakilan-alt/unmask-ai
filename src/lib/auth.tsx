@@ -10,6 +10,9 @@ interface AuthState {
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  signInWithGithub: () => Promise<{ error: string | null }>;
+  signInWithMagicLink: (email: string) => Promise<{ error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -60,6 +63,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
+  const signInWithGithub: AuthState['signInWithGithub'] = async () => {
+    if (!isSupabaseConfigured) return { error: 'Authentication is not configured.' };
+    const { error } = await getSupabase().auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    return { error: error?.message ?? null };
+  };
+
+  const signInWithMagicLink: AuthState['signInWithMagicLink'] = async (email) => {
+    if (!isSupabaseConfigured) return { error: 'Authentication is not configured.' };
+    const { error } = await getSupabase().auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    return { error: error?.message ?? null };
+  };
+
+  const resetPassword: AuthState['resetPassword'] = async (email) => {
+    if (!isSupabaseConfigured) return { error: 'Authentication is not configured.' };
+    const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    return { error: error?.message ?? null };
+  };
+
   const signOut: AuthState['signOut'] = async () => {
     if (!isSupabaseConfigured) return;
     await getSupabase().auth.signOut();
@@ -75,6 +106,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signInWithGoogle,
+        signInWithGithub,
+        signInWithMagicLink,
+        resetPassword,
         signOut,
       }}
     >

@@ -97,7 +97,7 @@ export function TechSection() {
           {TECH.map((t, i) => (
             <div
               key={t.title}
-              className={`glass group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:border-neon/30 hover:shadow-[0_0_28px_rgba(0,255,102,0.15)] ${
+              className={`glass group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:border-neon/30 hover:shadow-[0_0_28px_rgba(88,221,242,0.15)] ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
               }`}
               style={{ transitionDelay: `${i * 60}ms` }}
@@ -278,7 +278,7 @@ export function ApiSection() {
               <Terminal className="h-4 w-4 text-neon" />
               <span className="text-xs font-semibold uppercase tracking-wider text-white/50">Request</span>
             </div>
-            <pre className="overflow-x-auto p-4 text-xs leading-relaxed text-white/70">
+            <pre className="code-block overflow-x-auto p-4 text-xs leading-relaxed text-neon-100">
 {`POST /v1/analyze
 Authorization: Bearer ua_live_••••
 Content-Type: multipart/form-data
@@ -293,7 +293,7 @@ curl https://api.unmask.ai/v1/analyze \\
               <Code2 className="h-4 w-4 text-neon" />
               <span className="text-xs font-semibold uppercase tracking-wider text-white/50">Response</span>
             </div>
-            <pre className="overflow-x-auto p-4 text-xs leading-relaxed text-white/70">
+            <pre className="code-block overflow-x-auto p-4 text-xs leading-relaxed text-neon-100">
 {`{
   "prediction": "real",
   "confidence": 0.989,
@@ -388,7 +388,7 @@ export function CtaSection({ onUpload }: { onUpload: () => void }) {
           </p>
           <button
             onClick={onUpload}
-            className="liquid-btn mt-7 inline-flex items-center gap-2.5 rounded-2xl bg-neon px-7 py-3.5 text-base font-bold text-black transition-all hover:shadow-[0_0_32px_rgba(0,255,102,0.45)]"
+            className="liquid-btn mt-7 inline-flex items-center gap-2.5 rounded-2xl bg-neon px-7 py-3.5 text-base font-bold text-black transition-all hover:shadow-[0_0_32px_rgba(88,221,242,0.45)]"
           >
             Analyze an Image
           </button>

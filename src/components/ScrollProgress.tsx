@@ -7,7 +7,7 @@ export default function ScrollProgress() {
   return (
     <motion.div
       aria-hidden
-      className="fixed left-0 right-0 top-0 z-[70] h-0.5 origin-left bg-gradient-to-r from-neon-500 via-neon to-neon-300 shadow-[0_0_12px_rgba(0,255,136,0.6)]"
+      className="fixed left-0 right-0 top-0 z-[70] h-0.5 origin-left bg-gradient-to-r from-neon-500 via-neon to-neon-300 shadow-[0_0_12px_rgba(88,221,242,0.6)]"
       style={{ scaleX }}
     />
   );

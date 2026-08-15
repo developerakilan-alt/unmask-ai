@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from 'react';
 
 function shimmer(): string {
-  return 'animate-pulse rounded-xl bg-white/[0.06]';
+  return 'skeleton-shimmer rounded-xl';
 }
 
 export function Skeleton({ className = '', ...rest }: HTMLAttributes<HTMLDivElement>) {
@@ -35,6 +35,31 @@ export function CardSkeleton() {
           <Skeleton className="h-3 w-2/3" />
           <Skeleton className="h-3 w-1/3" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Full-page placeholder shown while a lazy-loaded route mounts. */
+export function PageSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 py-16">
+      <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="mt-4 h-10 w-64 max-w-full" />
+        <Skeleton className="mt-4 h-4 w-full max-w-md" />
+      </div>
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
+      <div className="mt-10 grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
       </div>
     </div>
   );

@@ -5,20 +5,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: '#050505',
-        'ink-soft': '#0A0F0A',
+        ink: '#03172E',
+        'ink-soft': '#06223C',
         neon: {
-          DEFAULT: '#00FF88',
-          50: '#d0ffe8',
-          100: '#b3ffda',
-          200: '#80ffc2',
-          300: '#4dffaa',
-          400: '#1aff92',
-          500: '#00FF88',
-          600: '#00C853',
-          700: '#00993d',
-          800: '#006628',
-          900: '#003314',
+          DEFAULT: '#58DDF2',
+          50: '#EFFCFF',
+          100: '#D8F9FF',
+          200: '#B8F8FF',
+          300: '#8FF0FD',
+          400: '#6BE6FA',
+          500: '#58DDF2',
+          600: '#2FB6CE',
+          700: '#1E8BA3',
+          800: '#166A7F',
+          900: '#0D4554',
         },
         danger: {
           DEFAULT: '#ff3b3b',
@@ -29,6 +29,7 @@ export default {
       },
       fontFamily: {
         equinox: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        body: ['Manrope', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         '2xl': '20px',
@@ -60,16 +61,16 @@ export default {
           '100%': { transform: 'scale(1)', borderRadius: '20px' },
         },
         'pulse-glow': {
-          '0%,100%': { boxShadow: '0 0 24px rgba(0,255,136,0.25)' },
-          '50%': { boxShadow: '0 0 40px rgba(0,255,136,0.45)' },
+          '0%,100%': { boxShadow: '0 0 24px rgba(88,221,242,0.3)' },
+          '50%': { boxShadow: '0 0 40px rgba(88,221,242,0.55)' },
         },
         'fade-up': {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
         'border-pulse': {
-          '0%,100%': { borderColor: 'rgba(0, 255, 136, 0.15)' },
-          '50%': { borderColor: 'rgba(0, 255, 136, 0.35)' },
+          '0%,100%': { borderColor: 'rgba(88, 221, 242, 0.2)' },
+          '50%': { borderColor: 'rgba(88, 221, 242, 0.45)' },
         },
       },
       animation: {

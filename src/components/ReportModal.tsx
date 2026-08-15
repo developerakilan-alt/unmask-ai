@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Flag, X, Send, Loader2 } from 'lucide-react';
 import { reportScan } from '../api';
 import { useToast } from '../lib/toast';
+import { ModalShell } from './ModalShell';
 
 interface ReportModalProps {
   scanId?: string;
@@ -31,8 +32,8 @@ export default function ReportModal({ scanId, onClose }: ReportModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[95] grid place-items-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass w-full max-w-md rounded-3xl p-6" onClick={(e) => e.stopPropagation()}>
+    <ModalShell label="Report this scan" onClose={onClose}>
+      <div className="glass w-full max-w-md rounded-3xl p-6">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-lg font-bold text-white">
             <Flag className="h-5 w-5 text-danger" /> Report this scan
@@ -78,6 +79,6 @@ export default function ReportModal({ scanId, onClose }: ReportModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   );
 }

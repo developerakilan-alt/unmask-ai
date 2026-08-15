@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { PLANS, getPlan, isStripeConfigured, startCheckout, type Plan } from '../lib/billing';
 import { useToast } from '../lib/toast';
 import { useI18n } from '../lib/i18n';
+import { useFocusTrap } from './ModalShell';
 
 function planName(id: string, t: (k: string) => string) {
   if (id === 'free') return t('plan.free');
@@ -16,6 +17,7 @@ export default function PricingModal({ open, onClose }: { open: boolean; onClose
   const { t } = useI18n();
   const [active, setActive] = useState<'free' | 'pro'>(getPlan());
   const [busy, setBusy] = useState<string | null>(null);
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, onClose);
 
   const onUpgraded = (planId: string) => {
     try {
@@ -59,6 +61,11 @@ export default function PricingModal({ open, onClose }: { open: boolean; onClose
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
           onClick={onClose}
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('pro.title')}
+          tabIndex={-1}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -99,7 +106,7 @@ export default function PricingModal({ open, onClose }: { open: boolean; onClose
                   <div
                     key={plan.id}
                     className={`relative flex flex-col rounded-2xl border bg-white/[0.03] p-5 ${
-                      highlight ? 'border-neon/40 shadow-[0_0_20px_rgba(0,255,102,0.2)]' : 'border-white/10'
+                      highlight ? 'border-neon/40 shadow-[0_0_20px_rgba(88,221,242,0.2)]' : 'border-white/10'
                     }`}
                   >
                     {highlight && (
@@ -129,7 +136,7 @@ export default function PricingModal({ open, onClose }: { open: boolean; onClose
                         disabled
                           ? 'cursor-not-allowed bg-white/[0.06] text-white/30'
                           : highlight
-                            ? 'bg-neon text-black hover:bg-neon/90 hover:shadow-[0_0_20px_rgba(0,255,102,0.4)]'
+                            ? 'bg-neon text-black hover:bg-neon/90 hover:shadow-[0_0_20px_rgba(88,221,242,0.4)]'
                             : 'border border-white/10 text-white/70 hover:bg-white/5 hover:text-white'
                       }`}
                     >

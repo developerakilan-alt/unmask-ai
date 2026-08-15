@@ -1,11 +1,11 @@
 import { useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { useAuth } from '../lib/auth';
-import { LogOut, Menu, X, Github, LayoutDashboard, BookOpen, TerminalSquare, HeartPulse, Search, FlaskConical, Clapperboard, ShieldCheck, Languages, Zap } from 'lucide-react';
+import { LogOut, Menu, X, Github, Search, Languages, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { navigate } from '../lib/router';
 import { useI18n } from '../lib/i18n';
 import ThemeToggle from './ThemeToggle';
-import { LiquidNavButton, LiquidNavLink } from './LiquidNavButton';
+import { LiquidNavButton } from './LiquidNavButton';
 
 interface NavbarProps {
   onAuthOpen: () => void;
@@ -13,21 +13,14 @@ interface NavbarProps {
   onOpenPricing: () => void;
 }
 
-const ANCHOR_LINKS = [
-  { labelKey: 'nav.features', href: 'features' },
-  { labelKey: 'nav.technology', href: 'technology' },
-  { labelKey: 'nav.api', href: 'api' },
-  { labelKey: 'nav.about', href: 'about' },
-];
-
-const ROUTE_LINKS = [
-  { labelKey: 'nav.dashboard', icon: LayoutDashboard, route: 'dashboard' },
-  { labelKey: 'nav.compare', icon: FlaskConical, route: 'compare' },
-  { labelKey: 'nav.video', icon: Clapperboard, route: 'video' },
-  { labelKey: 'nav.source', icon: ShieldCheck, route: 'source' },
-  { labelKey: 'nav.apiDocs', icon: BookOpen, route: 'docs' },
-  { labelKey: 'nav.playground', icon: TerminalSquare, route: 'playground' },
-  { labelKey: 'nav.status', icon: HeartPulse, route: 'status' },
+const NAV_LINKS = [
+  { labelKey: 'nav.home', href: '#home' },
+  { labelKey: 'nav.features', href: '#features' },
+  { labelKey: 'nav.technology', href: '#technology' },
+  { labelKey: 'nav.detector', href: '#detector' },
+  { labelKey: 'nav.api', href: '#api' },
+  { labelKey: 'nav.about', href: '#about' },
+  { labelKey: 'nav.contact', href: '#contact' },
 ];
 
 export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: NavbarProps) {
@@ -38,13 +31,13 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
   const [activeSection, setActiveSection] = useState('');
 
   useEffect(() => {
-    const ids = ANCHOR_LINKS.map((l) => l.href);
+    const ids = NAV_LINKS.map((l) => l.href.replace('#', ''));
     const onScroll = () => {
       setScrolled(window.scrollY > 24);
       let current = '';
       for (const id of ids) {
         const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= 150) current = id;
+        if (el && el.getBoundingClientRect().top <= 160) current = id;
       }
       setActiveSection(current);
     };
@@ -73,8 +66,8 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
     const y = (e.clientY - r.top) / Math.max(r.height, 1);
     el.style.setProperty('--mx', `${(x * 100).toFixed(2)}%`);
     el.style.setProperty('--my', `${(y * 100).toFixed(2)}%`);
-    el.style.setProperty('--rx', `${((0.5 - y) * 9).toFixed(2)}deg`);
-    el.style.setProperty('--ry', `${((x - 0.5) * 9).toFixed(2)}deg`);
+    el.style.setProperty('--rx', `${((0.5 - y) * 6).toFixed(2)}deg`);
+    el.style.setProperty('--ry', `${((x - 0.5) * 6).toFixed(2)}deg`);
   };
 
   const boxTiltReset = (e: ReactMouseEvent<HTMLElement>) => {
@@ -85,147 +78,146 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
 
   return (
     <header className={`sticky top-0 z-50 px-4 transition-all duration-300 sm:px-6 ${scrolled ? 'pt-2' : 'pt-5'}`}>
-      <nav
-        className={`mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-2xl px-4 py-3 transition-all duration-300 sm:px-6 ${
-          scrolled ? 'glass shadow-[0_8px_40px_rgba(0,0,0,0.5)]' : 'glass-pill'
-        }`}
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <img src="/logo.png" alt="Unmask AI" className="h-12 w-12 rounded-xl object-contain" />
-            <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-neon/30" />
-          </div>
-          <button onClick={() => go('home')} className="text-lg font-bold tracking-tight text-white">
-            Unmask <span className="neon-text">AI</span>
+      <div className="mx-auto max-w-6xl">
+        {/* Brand lockup */}
+        <motion.div
+          initial={{ opacity: 0, y: -14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="flex items-center justify-between gap-4"
+        >
+          <button
+            onClick={() => go('home')}
+            className="group flex items-center gap-3"
+            aria-label="Unmask AI — home"
+          >
+            <img
+              src={`${import.meta.env.BASE_URL}logo.png`}
+              alt="Unmask AI logo"
+              className="h-10 w-10 rounded-2xl object-contain ring-1 ring-inset ring-white/30"
+            />
           </button>
-        </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <LiquidNavButton
-            onClick={onOpenPalette}
-            className="hidden h-9 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs text-white/40 transition-colors hover:bg-white/5 hover:text-white/70 md:flex"
-            title="Search (Ctrl+K)"
-          >
-            <Search className="h-3.5 w-3.5" />
-            <span>Search</span>
-            <kbd className="rounded border border-white/10 bg-white/5 px-1 text-[9px]">⌘K</kbd>
-          </LiquidNavButton>
+          <div className="pointer-events-none flex flex-col items-center text-center">
+            <span className="text-xl font-bold tracking-[0.18em] text-white sm:text-2xl">
+              UNMASK <span className="neon-text">AI</span>
+            </span>
+            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.55em] text-white/55 sm:text-[10px]">
+              {t('nav.brandTag')}
+            </span>
+          </div>
 
-          <ThemeToggle />
-          <LiquidNavButton
-            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
-            className="flex h-9 items-center gap-1.5 rounded-xl border border-white/10 px-2.5 text-xs text-white/50 transition-colors hover:bg-white/5 hover:text-white"
-            title={t('nav.language')}
-          >
-            <Languages className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{lang === 'en' ? 'ES' : 'EN'}</span>
-          </LiquidNavButton>
-          <LiquidNavButton
-            onClick={onOpenPricing}
-            className="flex items-center gap-1.5 rounded-xl bg-neon px-3.5 py-2 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,102,0.4)]"
-          >
-            <Zap className="h-3.5 w-3.5" />
-            {t('nav.upgrade')}
-          </LiquidNavButton>
-          {user ? (
-            <>
-              <span className="hidden text-sm text-white/60 lg:inline">{user.email}</span>
-              <LiquidNavButton
-                onClick={signOut}
-                className="glass-pill flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t('nav.signout')}</span>
-              </LiquidNavButton>
-            </>
-          ) : (
-            <>
-              <LiquidNavButton
-                onClick={onAuthOpen}
-                className="px-2 text-sm text-white/70 transition-colors hover:text-white sm:px-3"
-              >
-                {t('nav.login')}
-              </LiquidNavButton>
-              <LiquidNavButton
-                onClick={onAuthOpen}
-                className="glass-pill rounded-xl px-4 py-2 text-sm font-semibold text-neon transition-colors hover:text-neon-100"
-              >
-                {t('nav.signup')}
-              </LiquidNavButton>
-            </>
-          )}
-
-          <LiquidNavLink
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:grid h-9 w-9 place-items-center rounded-xl text-white/50 transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="GitHub"
-          >
-            <Github className="h-4 w-4" />
-          </LiquidNavLink>
-
-          {/* Mobile menu toggle */}
-          <LiquidNavButton
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden grid h-9 w-9 place-items-center rounded-xl text-white/50 transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="Menu"
-          >
-            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </LiquidNavButton>
-        </div>
-      </nav>
-
-      {/* Left side box — on-page links (fixed, aligned with upload zone) */}
-      <div className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
-        <div className="side-box-float">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.35, ease: 'easeOut' }}
-          className="side-box flex flex-col items-stretch gap-0.5 p-1.5"
-          onMouseMove={boxTilt}
-          onMouseLeave={boxTiltReset}
-        >
-          {ANCHOR_LINKS.map((link) => (
-            <LiquidNavLink
-              key={link.labelKey}
-              href={`#${link.href}`}
-              active={activeSection === link.href}
-              className={`px-3 py-2 text-sm transition-colors rounded-lg hover:bg-white/5 ${
-                activeSection === link.href ? 'font-semibold text-neon' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {t(link.labelKey)}
-            </LiquidNavLink>
-          ))}
-        </motion.div>
-        </div>
-      </div>
-
-      {/* Right side box — app pages, one by one (fixed, aligned with upload zone) */}
-      <div className="fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 lg:block">
-        <div className="side-box-float side-box-float-delayed">
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.45, ease: 'easeOut' }}
-          className="side-box flex w-52 flex-col gap-0.5 p-2"
-          onMouseMove={boxTilt}
-          onMouseLeave={boxTiltReset}
-        >
-          {ROUTE_LINKS.map((link) => (
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <LiquidNavButton
-              key={link.route}
-              onClick={() => go(link.route)}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+              onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+              className="hidden h-9 items-center gap-1.5 rounded-xl border border-white/15 px-2.5 text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white sm:flex"
+              title={t('nav.language')}
             >
-              <link.icon className="h-3.5 w-3.5 text-neon/80" />
-              {t(link.labelKey)}
+              <Languages className="h-3.5 w-3.5" />
+              <span>{lang === 'en' ? 'ES' : 'EN'}</span>
             </LiquidNavButton>
-          ))}
+          </div>
         </motion.div>
-        </div>
+
+        {/* Glass navigation bar */}
+        <motion.nav
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
+          onMouseMove={boxTilt}
+          onMouseLeave={boxTiltReset}
+          className="glass mt-4 flex items-center justify-between gap-3 rounded-full py-2.5 pl-5 pr-2.5"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.labelKey}
+                href={link.href}
+                className={`whitespace-nowrap rounded-full px-3.5 py-2 text-sm transition-colors ${
+                  activeSection === link.href.replace('#', '')
+                    ? 'bg-white/15 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]'
+                    : 'text-white/65 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {t(link.labelKey)}
+              </a>
+            ))}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <LiquidNavButton
+              onClick={onOpenPalette}
+              className="hidden h-9 items-center gap-2 rounded-full border border-white/15 px-3 text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white md:flex"
+              title="Search (Ctrl+K)"
+            >
+              <Search className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline">{t('nav.search')}</span>
+              <kbd className="rounded border border-white/15 bg-white/10 px-1 text-[9px] text-white/50">⌘K</kbd>
+            </LiquidNavButton>
+
+            {user ? (
+              <>
+                <div className="hidden items-center gap-2 xl:flex" title={user.email}>
+                  <span className="relative grid h-8 w-8 place-items-center rounded-full border border-neon/40 bg-neon/10 text-xs font-bold uppercase text-neon">
+                    {user.email?.charAt(0) ?? 'U'}
+                    <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white/60 bg-emerald-400" aria-label="Online" />
+                  </span>
+                  <span className="max-w-[140px] truncate text-xs text-white/60">{user.email}</span>
+                </div>
+                <LiquidNavButton
+                  onClick={signOut}
+                  className="glass-btn flex h-9 items-center gap-1.5 px-4 text-xs font-semibold"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t('nav.signout')}</span>
+                </LiquidNavButton>
+              </>
+            ) : (
+              <>
+                <LiquidNavButton
+                  onClick={onAuthOpen}
+                  className="hidden px-3 py-2 text-sm text-white/70 transition-colors hover:text-white sm:block"
+                >
+                  {t('nav.login')}
+                </LiquidNavButton>
+                <LiquidNavButton
+                  onClick={onAuthOpen}
+                  className="glass-btn-primary flex h-9 items-center px-4 text-xs font-bold"
+                >
+                  {t('nav.signup')}
+                </LiquidNavButton>
+              </>
+            )}
+
+            <LiquidNavButton
+              onClick={onOpenPricing}
+              className="hidden h-9 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:flex"
+              title="Pro"
+            >
+              <Zap className="h-3.5 w-3.5" />
+              {t('nav.upgrade')}
+            </LiquidNavButton>
+
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden h-9 w-9 place-items-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white sm:grid"
+              aria-label="GitHub"
+            >
+              <Github className="h-4 w-4" />
+            </a>
+
+            <LiquidNavButton
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="grid h-9 w-9 place-items-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+              aria-label="Menu"
+            >
+              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </LiquidNavButton>
+          </div>
+        </motion.nav>
       </div>
 
       {/* Mobile drawer */}
@@ -235,7 +227,7 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-ink/60 backdrop-blur-sm lg:hidden"
             onClick={() => setMobileOpen(false)}
           >
             <motion.div
@@ -250,44 +242,21 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
                 <p className="text-sm font-bold text-white">{t('nav.menu')}</p>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-white/5 hover:text-white"
+                  className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-white/10 hover:text-white"
                   aria-label="Close menu"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">{t('nav.pages')}</p>
-              {ROUTE_LINKS.map((link) => (
-                <button
-                  key={link.route}
-                  onClick={() => go(link.route)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
-                >
-                  <link.icon className="h-4 w-4 text-neon" />
-                  {t(link.labelKey)}
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  setMobileOpen(false);
-                  onOpenPricing();
-                }}
-                className="flex items-center gap-3 rounded-xl bg-neon/10 px-3 py-3 text-sm font-semibold text-neon transition-colors hover:bg-neon/20"
-              >
-                <Zap className="h-4 w-4" />
-                {t('nav.upgrade')}
-              </button>
-
-              <div className="my-2 h-px bg-white/10" />
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">{t('nav.onThisPage')}</p>
-              {ANCHOR_LINKS.map((link) => (
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">{t('nav.onThisPage')}</p>
+              {NAV_LINKS.map((link) => (
                 <a
                   key={link.labelKey}
-                  href={`#${link.href}`}
+                  href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`rounded-xl px-3 py-3 text-sm transition-colors hover:bg-white/5 ${
-                    activeSection === link.href ? 'font-semibold text-neon' : 'text-white/70 hover:text-white'
+                  className={`rounded-xl px-3 py-3 text-sm transition-colors hover:bg-white/10 ${
+                    activeSection === link.href.replace('#', '') ? 'font-semibold text-white' : 'text-white/70 hover:text-white'
                   }`}
                 >
                   {t(link.labelKey)}
@@ -300,9 +269,19 @@ export default function Navbar({ onAuthOpen, onOpenPalette, onOpenPricing }: Nav
                   setMobileOpen(false);
                   onOpenPalette();
                 }}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <Search className="h-4 w-4 text-neon" /> {t('nav.search')}…
+              </button>
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  onOpenPricing();
+                }}
+                className="glass-btn-primary mt-1 flex items-center gap-3 px-4 py-3 text-sm font-bold"
+              >
+                <Zap className="h-4 w-4" />
+                {t('nav.upgrade')}
               </button>
             </motion.div>
           </motion.div>

@@ -87,7 +87,7 @@ export default function NeuralBackground() {
           const dist = Math.hypot(dx, dy);
           if (dist < LINK_DIST) {
             const alpha = (1 - dist / LINK_DIST) * 0.32;
-            ctx.strokeStyle = `rgba(0,255,102,${alpha})`;
+            ctx.strokeStyle = `rgba(88,221,242,${alpha})`;
             ctx.lineWidth = 0.6;
             ctx.beginPath();
             ctx.moveTo(nodes[i].x, nodes[i].y);
@@ -110,7 +110,7 @@ export default function NeuralBackground() {
           const b = nodes[s.to];
           const x = a.x + (b.x - a.x) * s.t;
           const y = a.y + (b.y - a.y) * s.t;
-          ctx.fillStyle = `rgba(0,255,140,${0.9 * (1 - Math.abs(s.t - 0.5) * 2)})`;
+          ctx.fillStyle = `rgba(88,221,242,${0.9 * (1 - Math.abs(s.t - 0.5) * 2)})`;
           ctx.beginPath();
           ctx.arc(x, y, 2, 0, Math.PI * 2);
           ctx.fill();
@@ -120,11 +120,11 @@ export default function NeuralBackground() {
       // Draw nodes
       for (const n of nodes) {
         const glow = 0.5 + Math.sin(n.pulse) * 0.25;
-        ctx.fillStyle = `rgba(0,255,102,${0.45 + glow * 0.3})`;
+        ctx.fillStyle = `rgba(88,221,242,${0.45 + glow * 0.3})`;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = `rgba(0,255,102,${0.08 * glow})`;
+        ctx.fillStyle = `rgba(88,221,242,${0.08 * glow})`;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r * 4, 0, Math.PI * 2);
         ctx.fill();

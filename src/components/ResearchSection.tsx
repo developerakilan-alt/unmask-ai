@@ -25,7 +25,7 @@ export default function ResearchSection() {
         <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
           {TOOLS.map((tool, i) => (
             <AnimatedSection key={tool.name} delay={i * 80}>
-              <div className="glass group flex items-center gap-3 rounded-xl px-5 py-3 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_20px_rgba(0,255,102,0.08)]">
+              <div className="glass group flex items-center gap-3 rounded-xl px-5 py-3 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_20px_rgba(88,221,242,0.08)]">
                 <tool.icon className="h-5 w-5 text-neon/60 group-hover:text-neon transition-colors" />
                 <span className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">{tool.name}</span>
               </div>

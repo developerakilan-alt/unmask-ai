@@ -26,8 +26,8 @@ export default function NeuralMesh({ className = '' }: NeuralMeshProps) {
     container.appendChild(renderer.domElement);
 
     const group = new THREE.Group();
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.4 });
-    const nodeMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.85 });
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x58ddf2, transparent: true, opacity: 0.4 });
+    const nodeMat = new THREE.MeshBasicMaterial({ color: 0x58ddf2, transparent: true, opacity: 0.85 });
 
     const LAYER_COUNTS = [7, 9, 5];
     const LAYER_X = [-1.7, 0, 1.7];

@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { Folder, Layers, Link2, Loader2, Upload, X, ShieldCheck, ShieldAlert, Activity } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Folder, Layers, Link2, Loader2, Upload, X, ShieldCheck, ShieldAlert, Activity, FileDown, FileText } from 'lucide-react';
 import { analyzeImageWithFallback, type AnalysisResult } from '../api';
 import { useToast } from '../lib/toast';
 
@@ -17,13 +17,58 @@ export default function BatchPanel() {
   const [urls, setUrls] = useState<string[]>([]);
   const [items, setItems] = useState<BatchItem[]>([]);
   const [running, setRunning] = useState(false);
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    return () => {
+      Object.values(previews).forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [previews]);
+
+  const keyOf = (f: File) => `${f.name}:${f.size}`;
+
+  const addPreviews = (list: File[]) => {
+    const added: Record<string, string> = {};
+    for (const f of list) {
+      const k = keyOf(f);
+      if (!previews[k]) added[k] = URL.createObjectURL(f);
+    }
+    if (Object.keys(added).length > 0) setPreviews((prev) => ({ ...prev, ...added }));
+  };
 
   const pick = (list: FileList | null) => {
     if (!list) return;
     const imgs = Array.from(list).filter((f) => /image\//.test(f.type) || /\.(jpe?g|png|webp)$/i.test(f.name));
     if (imgs.length === 0) return;
     setFiles((prev) => [...prev, ...imgs].slice(0, 10));
+    addPreviews(imgs);
     setItems([]);
+  };
+
+  const removeFile = (f: File) => {
+    const k = keyOf(f);
+    setFiles((prev) => prev.filter((x) => keyOf(x) !== k));
+    setItems([]);
+    setPreviews((prev) => {
+      const next = { ...prev };
+      if (next[k]) {
+        URL.revokeObjectURL(next[k]);
+        delete next[k];
+      }
+      return next;
+    });
+  };
+
+  const removeUrl = (u: string) => {
+    setUrls((prev) => prev.filter((x) => x !== u));
+    setItems([]);
+  };
+
+  const thumbOf = (item: BatchItem): string | null => {
+    if (/^https?:\/\//i.test(item.filename)) return item.filename;
+    if (previews[item.filename]) return previews[item.filename];
+    const k = Object.keys(previews).find((key) => key.startsWith(`${item.filename}:`));
+    return k ? previews[k] : null;
   };
 
   const importCsv = async (file: File) => {
@@ -81,9 +126,33 @@ export default function BatchPanel() {
   };
 
   const clear = () => {
+    Object.values(previews).forEach((u) => URL.revokeObjectURL(u));
     setFiles([]);
     setUrls([]);
     setItems([]);
+    setPreviews({});
+  };
+
+  const exportRows = () =>
+    items.map((item) => ({
+      filename: item.filename,
+      classification: item.ok ? item.result.classification : 'error',
+      verdict: item.ok ? item.result.verdict : ('error' as const),
+      ai_percent: item.ok ? item.result.aiPercent : null,
+      confidence: item.ok ? item.result.confidence : null,
+      model: item.ok ? item.result.modelUsed : 'failed',
+      generator: item.ok ? item.result.attribution?.generator ?? null : null,
+      phash: item.ok ? item.result.phash ?? null : null,
+    }));
+
+  const exportCsv = async () => {
+    const { rowsToCsv, downloadText } = await import('../lib/exportResults');
+    downloadText(`unmask-ai-batch-${new Date().toISOString().slice(0, 10)}.csv`, rowsToCsv(exportRows()));
+  };
+
+  const exportPdf = async () => {
+    const { downloadRowsPdf } = await import('../lib/exportResults');
+    await downloadRowsPdf(exportRows(), `unmask-ai-batch-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   const verdictUi = (item: BatchItem) => {
@@ -135,13 +204,10 @@ export default function BatchPanel() {
       {files.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {files.map((f) => (
-            <span key={f.name + f.size} className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-xs text-white/60">
+            <span key={keyOf(f)} className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-xs text-white/60">
               {f.name}
               <button
-                onClick={() => {
-                  setFiles((prev) => prev.filter((x) => x !== f));
-                  setItems([]);
-                }}
+                onClick={() => removeFile(f)}
                 className="text-white/40 hover:text-danger"
               >
                 <X className="h-3 w-3" />
@@ -158,10 +224,7 @@ export default function BatchPanel() {
               <Link2 className="h-3 w-3 text-neon" />
               {u}
               <button
-                onClick={() => {
-                  setUrls((prev) => prev.filter((x) => x !== u));
-                  setItems([]);
-                }}
+                onClick={() => removeUrl(u)}
                 className="text-white/40 hover:text-danger"
               >
                 <X className="h-3 w-3" />
@@ -206,28 +269,63 @@ export default function BatchPanel() {
       )}
 
       {items.length > 0 && (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <div className="mt-4">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-white/40">Results</span>
+            <div className="flex-1" />
+            <button onClick={exportCsv} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:bg-white/5">
+              <FileDown className="h-3.5 w-3.5" /> Export CSV
+            </button>
+            <button onClick={exportPdf} className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/60 hover:bg-white/5">
+              <FileText className="h-3.5 w-3.5" /> Export PDF
+            </button>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
           {items.map((item, i) => {
             const ui = verdictUi(item);
+            const thumb = thumbOf(item);
             return (
               <div key={item.filename + i} className="flex items-center gap-3 rounded-xl bg-white/[0.03] px-3.5 py-3">
-                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${ui.cls}`}>
-                  {!item.ok ? <X className="h-4 w-4" /> : item.result.classification === 'AI_GENERATED' ? <ShieldAlert className="h-4 w-4" /> : item.result.classification === 'UNCERTAIN' ? <Activity className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                </span>
+                {thumb ? (
+                  <img
+                    src={thumb}
+                    alt={item.filename}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    className="h-10 w-10 shrink-0 rounded-lg border border-white/10 object-cover"
+                  />
+                ) : (
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${ui.cls}`}>
+                    {!item.ok ? <X className="h-4 w-4" /> : item.result.classification === 'AI_GENERATED' ? <ShieldAlert className="h-4 w-4" /> : item.result.classification === 'UNCERTAIN' ? <Activity className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                  </span>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-white/80">{item.filename}</p>
+                  {item.ok && (
+                    <div className="mt-1.5 h-1.5 w-full max-w-[160px] overflow-hidden rounded-full bg-white/[0.07]">
+                      <div
+                        className={`h-full rounded-full ${item.result.classification === 'AI_GENERATED' ? 'bg-danger' : item.result.classification === 'UNCERTAIN' ? 'bg-amber-400' : 'bg-neon'}`}
+                        style={{ width: `${item.result.aiPercent}%` }}
+                        title={`${item.result.aiPercent.toFixed(1)}% AI likelihood`}
+                      />
+                    </div>
+                  )}
                   {item.ok && item.result.forensics?.noise && (
-                    <p className="text-[10px] text-white/35">
+                    <p className="mt-1 text-[10px] text-white/35">
                       noise {item.result.forensics.noise.noise_level.toFixed(2)} · sharpness {item.result.forensics.noise.sharpness.toFixed(1)}
                     </p>
                   )}
                 </div>
-                <span className={`shrink-0 text-sm font-bold ${ui.color}`}>
-                  {item.ok ? `${ui.pct.toFixed(1)}%` : 'failed'}
-                </span>                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${ui.cls}`}>{ui.badge}</span>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className={`text-sm font-bold ${ui.color}`}>
+                    {item.ok ? `${ui.pct.toFixed(1)}%` : 'failed'}
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${ui.cls}`}>{ui.badge}</span>
+                </div>
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </div>

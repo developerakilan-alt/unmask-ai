@@ -1,5 +1,5 @@
 import { AnimatedSection } from './AnimatedSection';
-import Marquee from './Marquee';
+import { VelocityMarquee } from './Marquee';
 import { Brain, Cpu, Boxes, Binary, Gauge, Network, Layers, ScanSearch } from 'lucide-react';
 
 const MODELS = [
@@ -28,11 +28,11 @@ export default function SupportedModels() {
       </div>
 
       <AnimatedSection className="mt-10" direction="none">
-        <Marquee duration={38}>
+        <VelocityMarquee baseDuration={38}>
           {MODELS.map((model) => (
             <div
               key={model.name}
-              className="glass group flex shrink-0 items-center gap-3 rounded-xl px-6 py-3.5 transition-colors hover:border-neon/30"
+              className="glass-flat group flex shrink-0 items-center gap-3 rounded-xl px-6 py-3.5 transition-colors hover:border-neon/30"
             >
               <span className="grid h-8 w-8 place-items-center rounded-lg border border-neon/25 bg-neon/10 text-neon transition-transform group-hover:scale-110">
                 <model.icon className="h-4 w-4" strokeWidth={2} />
@@ -43,21 +43,21 @@ export default function SupportedModels() {
               </div>
             </div>
           ))}
-        </Marquee>
+        </VelocityMarquee>
       </AnimatedSection>
 
       <AnimatedSection className="mt-4" direction="none" delay={0.1}>
-        <Marquee duration={48} reverse>
+        <VelocityMarquee baseDuration={48} reverse>
           {['EXIF Forensics', 'Noise Residuals', 'Compression Grids', 'GAN Artifacts', 'Lighting Coherence', 'Shadow Geometry', 'Chroma Noise', 'Edge Coherence'].map((t) => (
             <span
               key={t}
-              className="glass-pill shrink-0 rounded-full px-5 py-2 text-xs font-semibold tracking-wide text-white/50"
+              className="glass-flat shrink-0 rounded-full px-5 py-2 text-xs font-semibold tracking-wide text-white/50"
             >
               <span className="mr-2 text-neon">✦</span>
               {t}
             </span>
           ))}
-        </Marquee>
+        </VelocityMarquee>
       </AnimatedSection>
     </section>
   );

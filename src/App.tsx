@@ -5,6 +5,7 @@ import { parseHash, type Route } from './lib/router';
 import { SmoothScroll } from './lib/smooth';
 import { compressImage } from './lib/image';
 import { saveResult } from './lib/history';
+import { enableRipple } from './lib/ripple';
 
 import LiquidBackground from './components/LiquidBackground';
 import Navbar from './components/Navbar';
@@ -19,6 +20,7 @@ import APIPreview from './components/APIPreview';
 import ResearchSection from './components/ResearchSection';
 import BeforeAfterDemo from './components/BeforeAfterDemo';
 import WhatCanYouCheck from './components/WhatCanYouCheck';
+import { AnalysisShowcase, ReportPreview } from './components/AnalysisShowcase';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import ImageEditor from './components/ImageEditor';
@@ -28,6 +30,15 @@ import CommandPalette from './components/CommandPalette';
 import NotFoundPage from './components/NotFoundPage';
 import ReportModal from './components/ReportModal';
 import GDPRConsent from './components/GDPRConsent';
+import SplashScreen from './components/SplashScreen';
+import CursorGlow from './components/CursorGlow';
+import SectionDots from './components/SectionDots';
+import BackToTop from './components/BackToTop';
+import FloatingShapes3D from './components/FloatingShapes3D';
+import InstallPrompt from './components/InstallPrompt';
+import CommunityGallery from './components/CommunityGallery';
+import WaitlistModal from './components/WaitlistModal';
+import { PageSkeleton } from './components/Skeleton';
 
 // Route pages are lazy-loaded so the landing page ships first.
 const AnalyzingPage = lazy(() => import('./components/AnalyzingPage'));
@@ -43,18 +54,13 @@ const ComparePanel = lazy(() => import('./components/ComparePanel'));
 const VideoAnalyzer = lazy(() => import('./components/VideoAnalyzer'));
 const SourceChecker = lazy(() => import('./components/SourceChecker'));
 const PricingModal = lazy(() => import('./components/PricingModal'));
+const WidgetPage = lazy(() => import('./components/WidgetPage'));
+const CalibrationPage = lazy(() => import('./components/CalibrationPage'));
 
 type Flow = 'home' | 'analyzing' | 'result';
 
 function RouteFallback() {
-  return (
-    <div className="flex min-h-[50vh] items-center justify-center px-4">
-      <div className="glass flex items-center gap-3 rounded-2xl px-5 py-4">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-neon/40 border-t-neon" />
-        <p className="text-sm text-white/60">Loading…</p>
-      </div>
-    </div>
-  );
+  return <PageSkeleton />;
 }
 
 export default function App() {
@@ -69,6 +75,13 @@ export default function App() {
   const [reportOpen, setReportOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistSource, setWaitlistSource] = useState('site');
+
+  const openWaitlist = useCallback((source = 'site') => {
+    setWaitlistSource(source);
+    setWaitlistOpen(true);
+  }, []);
 
   useEffect(() => {
     const onHash = () => {
@@ -88,6 +101,10 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
+    enableRipple();
   }, []);
 
   useEffect(() => {
@@ -175,19 +192,42 @@ export default function App() {
 
   const onStatic =
     route &&
-    ['dashboard', 'docs', 'playground', 'status', 'privacy', 'terms', 'compare', 'video', 'source'].includes(route.name);
+    ['dashboard', 'docs', 'playground', 'status', 'privacy', 'terms', 'compare', 'video', 'source', 'calibration'].includes(route.name);
+
+  // The widget route is a bare analyzer meant to run inside an iframe —
+  // no chrome, no smooth scroll, no background.
+  if (route?.name === 'widget') {
+    return (
+      <Suspense fallback={null}>
+        <WidgetPage />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden font-equinox">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-neon focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-black"
+      >
+        Skip to content
+      </a>
       <LiquidBackground />
+      {!route && <FloatingShapes3D className="pointer-events-none fixed inset-0 z-0" />}
       <ScrollProgress />
+      <CursorGlow />
+      <BackToTop />
+      <InstallPrompt />
+      {!route && <SectionDots />}
+      <SplashScreen />
       <SmoothScroll>
-        <div className="relative z-10 lg:px-44 xl:px-56">
-          <Navbar
-            onAuthOpen={() => setAuthOpen(true)}
-            onOpenPalette={() => setPaletteOpen(true)}
-            onOpenPricing={() => setPricingOpen(true)}
-          />
+          <div className="relative z-10">
+            <main id="main">
+            <Navbar
+              onAuthOpen={() => setAuthOpen(true)}
+              onOpenPalette={() => setPaletteOpen(true)}
+              onOpenPricing={() => setPricingOpen(true)}
+            />
 
           {route?.name === 'share' ? (
             <Suspense fallback={<RouteFallback />}>
@@ -229,6 +269,10 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
               <SourceChecker />
             </Suspense>
+          ) : route?.name === 'calibration' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <CalibrationPage />
+            </Suspense>
           ) : route?.name === 'notfound' ? (
             <NotFoundPage />
           ) : onStatic ? null : (
@@ -245,18 +289,21 @@ export default function App() {
                     onEdit={() => setEditing(true)}
                     onUrl={startUrlAnalysis}
                   />
-                  <section className="relative z-10 mx-auto w-full max-w-[620px] px-4 pb-10">
+                  <section className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-10">
                     <BatchPanel />
                   </section>
                   <Statistics />
                   <HowItWorks />
+                  <AnalysisShowcase />
                   <DetectionMethods />
+                  <SupportedModels />
+                  <ReportPreview />
+                  <CommunityGallery onJoinWaitlist={() => openWaitlist('gallery')} />
                   <BeforeAfterDemo />
                   <WhatCanYouCheck />
                   <WhyChooseUs />
                   <Testimonials />
-                  <SupportedModels />
-                  <APIPreview />
+                  <APIPreview onJoinWaitlist={() => openWaitlist('api')} />
                   <ResearchSection />
                 </>
               )}
@@ -289,6 +336,7 @@ export default function App() {
 
           <Footer />
           <GDPRConsent />
+          </main>
         </div>
       </SmoothScroll>
 
@@ -304,6 +352,9 @@ export default function App() {
           <Suspense fallback={null}>
             <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />
           </Suspense>
+        )}
+        {waitlistOpen && (
+          <WaitlistModal source={waitlistSource} onClose={() => setWaitlistOpen(false)} />
         )}
       </AnimatePresence>
 

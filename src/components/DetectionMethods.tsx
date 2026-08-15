@@ -71,10 +71,10 @@ export default function DetectionMethods() {
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {METHODS.map((method, i) => (
             <AnimatedSection key={method.title} delay={i * 80}>
-              <TiltCard glow className="glass relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(0,255,102,0.1)]">
+              <TiltCard glow className="glass relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(88,221,242,0.1)]">
                 <div className={`absolute inset-0 bg-gradient-to-br ${method.color} opacity-0 transition-opacity group-hover:opacity-100`} />
                 <div className="relative">
-                  <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-neon/20 bg-neon/10 transition-all group-hover:scale-110 group-hover:border-neon/40 group-hover:shadow-[0_0_20px_rgba(0,255,102,0.15)]">
+                  <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-neon/20 bg-neon/10 transition-all group-hover:scale-110 group-hover:border-neon/40 group-hover:shadow-[0_0_20px_rgba(88,221,242,0.15)]">
                     <method.icon className="h-6 w-6 text-neon" />
                   </div>
                   <h3 className="text-lg font-bold text-white">{method.title}</h3>

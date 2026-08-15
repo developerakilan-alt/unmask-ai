@@ -8,10 +8,12 @@ import {
   HeartPulse,
   ShieldCheck,
   FileText,
+  FlaskConical,
   Home,
   ArrowRight,
 } from 'lucide-react';
 import { navigate } from '../lib/router';
+import { useFocusTrap } from './ModalShell';
 
 interface Action {
   id: string;
@@ -34,6 +36,7 @@ const ROUTES: { label: string; hint: string; icon: typeof Home; route: string }[
   { label: 'System Status', hint: 'Live service health', icon: HeartPulse, route: 'status' },
   { label: 'Privacy Policy', hint: 'How we handle your data', icon: ShieldCheck, route: 'privacy' },
   { label: 'Terms of Service', hint: 'Usage terms', icon: FileText, route: 'terms' },
+  { label: 'Detector Calibration', hint: 'Self-test accuracy on-device', icon: FlaskConical, route: 'calibration' },
 ];
 
 const SECTIONS: { label: string; hint: string; id: string }[] = [
@@ -47,6 +50,7 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, onClose);
 
   const actions = useMemo<Action[]>(() => {
     const q = query.trim().toLowerCase();
@@ -138,6 +142,11 @@ export default function CommandPalette({ open, onClose }: CommandPaletteProps) {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[80] flex items-start justify-center bg-black/60 px-4 pt-[12vh] backdrop-blur-sm"
           onClick={onClose}
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Command palette"
+          tabIndex={-1}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: -10 }}

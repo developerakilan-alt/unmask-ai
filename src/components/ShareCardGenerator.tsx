@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, ImageIcon, Loader2, X } from 'lucide-react';
+import { Download, ImageIcon, Loader2, X, BadgeCheck, Code2, Check } from 'lucide-react';
 
 export interface CardResult {
   classification: 'AI_GENERATED' | 'REAL' | 'UNCERTAIN';
@@ -16,15 +16,22 @@ interface ShareCardGeneratorProps {
   onClose: () => void;
 }
 
+const W = 900;
+const H = 506;
+const SEAL = 600;
+
 export default function ShareCardGenerator({ result, previewUrl, onClose }: ShareCardGeneratorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sealRef = useRef<HTMLCanvasElement>(null);
   const [busy, setBusy] = useState(true);
+  const [sealBusy, setSealBusy] = useState(true);
+  const [mode, setMode] = useState<'card' | 'seal'>('card');
+  const [copied, setCopied] = useState(false);
 
-  const W = 900;
-  const H = 506;
   const isAI = result.classification === 'AI_GENERATED';
   const isUnc = result.classification === 'UNCERTAIN';
-  const accent = isAI ? '#ff3b3b' : isUnc ? '#fbbf24' : '#00ff88';
+  const isReal = !isAI && !isUnc;
+  const accent = isAI ? '#ff3b3b' : isUnc ? '#fbbf24' : '#58DDF2';
 
   useEffect(() => {
     let cancelled = false;
@@ -32,11 +39,11 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d')!;
-      ctx.fillStyle = '#0a0f0c';
+      ctx.fillStyle = '#031a2e';
       ctx.fillRect(0, 0, W, H);
 
       const grad = ctx.createLinearGradient(0, 0, W, H);
-      grad.addColorStop(0, 'rgba(0,255,136,0.10)');
+      grad.addColorStop(0, 'rgba(88,221,242,0.10)');
       grad.addColorStop(0.5, 'rgba(0,0,0,0)');
       grad.addColorStop(1, 'rgba(255,59,59,0.12)');
       ctx.fillStyle = grad;
@@ -46,7 +53,7 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
       ctx.fillRect(0, 0, W, 6);
 
       ctx.font = 'bold 40px "Inter", sans-serif';
-      ctx.fillStyle = '#00ff88';
+      ctx.fillStyle = '#58DDF2';
       ctx.fillText('UNMASK AI', 40, 58);
       ctx.font = '16px "Inter", sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.45)';
@@ -96,7 +103,7 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
       ctx.beginPath();
       ctx.roundRect(40, 120, badgeW, 64, 12);
       ctx.fill();
-      ctx.fillStyle = '#0a0f0c';
+      ctx.fillStyle = '#031a2e';
       ctx.font = 'bold 30px "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(isAI ? 'AI-GENERATED' : isUnc ? 'UNCERTAIN' : 'REAL IMAGE', 40 + badgeW / 2, 161);
@@ -131,43 +138,170 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
     };
   }, [result, previewUrl]);
 
-  const download = () => {
-    const canvas = canvasRef.current;
+  useEffect(() => {
+    if (mode !== 'seal') return;
+    let cancelled = false;
+    const draw = () => {
+      const canvas = sealRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d')!;
+      const cx = SEAL / 2;
+      ctx.clearRect(0, 0, SEAL, SEAL);
+      ctx.fillStyle = '#031a2e';
+      ctx.fillRect(0, 0, SEAL, SEAL);
+
+      const ring = (r: number, color: string, lw: number) => {
+        ctx.beginPath();
+        ctx.arc(cx, cx, r, 0, Math.PI * 2);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lw;
+        ctx.stroke();
+      };
+      ring(285, 'rgba(88,221,242,0.18)', 18);
+      ring(250, accent, 6);
+      ring(150, 'rgba(88,221,242,0.35)', 2);
+
+      // Check mark
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 26;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx - 70, cx + 8);
+      ctx.lineTo(cx - 24, cx + 54);
+      ctx.lineTo(cx + 86, cx - 62);
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = '24px "Inter", sans-serif';
+      ctx.fillText('VERIFIED', cx, 110);
+      ctx.fillText('REAL IMAGE', cx, 142);
+      ctx.fillStyle = accent;
+      ctx.font = 'bold 34px "Inter", sans-serif';
+      ctx.fillText('UNMASK AI', cx, SEAL - 110);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = '16px "Inter", sans-serif';
+      ctx.fillText(`${result.confidence.toFixed(0)}% confidence  ·  ${new Date().toLocaleDateString()}`, cx, SEAL - 72);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '13px "Inter", sans-serif';
+      ctx.fillText(`scan ${result.scanId || 'n/a'}  ·  indicative, not proof`, cx, SEAL - 46);
+      ctx.textAlign = 'left';
+
+      if (!cancelled) setSealBusy(false);
+    };
+    draw();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, result]);
+
+  const download = (canvas: HTMLCanvasElement | null, name: string) => {
     if (!canvas) return;
     const a = document.createElement('a');
-    a.download = `unmask-ai-card-${(result.scanId || 'result').replace(/[^a-zA-Z0-9]/g, '')}.png`;
+    a.download = name;
     a.href = canvas.toDataURL('image/png');
     a.click();
   };
 
+  const copyEmbed = async () => {
+    const canvas = sealRef.current;
+    if (!canvas) return;
+    const src = canvas.toDataURL('image/png');
+    const snippet = `<img src="${src}" alt="Unmask AI verified real image badge" width="240" height="240" />`;
+    try {
+      await navigator.clipboard.writeText(snippet);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.prompt('Copy this embed snippet:', snippet);
+    }
+  };
+
+  const embedDisabled = !isReal || sealBusy;
+
   return (
-    <div className="fixed inset-0 z-[95] grid place-items-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass w-full max-w-xl rounded-3xl p-6" onClick={(e) => e.stopPropagation()}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Share card generator"
+      className="fixed inset-0 z-[95] grid place-items-center bg-black/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div className="glass w-full max-w-xl rounded-3xl p-6 outline-none" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-lg font-bold text-white">
-            <ImageIcon className="h-5 w-5 text-neon" /> Share card
+            <ImageIcon className="h-5 w-5 text-neon" /> Share
           </h3>
           <button onClick={onClose} className="text-white/50 hover:text-white" aria-label="Close">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-          <canvas ref={canvasRef} width={W} height={H} className="w-full" />
-        </div>
-
-        <div className="mt-4 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm text-white/60 hover:bg-white/5">
-            Close
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={() => setMode('card')}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold ${mode === 'card' ? 'bg-neon text-black' : 'border border-white/10 text-white/60 hover:bg-white/5'}`}
+          >
+            Share card
           </button>
           <button
-            onClick={download}
-            disabled={busy}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neon py-2.5 text-sm font-bold text-black hover:bg-neon/90 disabled:opacity-50"
+            onClick={() => setMode('seal')}
+            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold ${mode === 'seal' ? 'bg-neon text-black' : 'border border-white/10 text-white/60 hover:bg-white/5'}`}
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download PNG
+            <BadgeCheck className="h-4 w-4" /> Verified seal
           </button>
         </div>
+
+        {mode === 'card' ? (
+          <>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+              <canvas ref={canvasRef} width={W} height={H} className="w-full" />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button onClick={onClose} className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm text-white/60 hover:bg-white/5">
+                Close
+              </button>
+              <button
+                onClick={() => download(canvasRef.current, `unmask-ai-card-${(result.scanId || 'result').replace(/[^a-zA-Z0-9]/g, '')}.png`)}
+                disabled={busy}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neon py-2.5 text-sm font-bold text-black hover:bg-neon/90 disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download PNG
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {!isReal && (
+              <p className="mt-4 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs text-amber-300">
+                The Verified seal is only available for images classified as Real.
+              </p>
+            )}
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#031a2e]">
+              <canvas ref={sealRef} width={SEAL} height={SEAL} className="mx-auto w-full max-w-[320px]" />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => download(sealRef.current, `unmask-ai-verified-real-${new Date().toISOString().slice(0, 10)}.png`)}
+                disabled={embedDisabled}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 py-2.5 text-sm text-white/60 hover:bg-white/5 disabled:opacity-40"
+              >
+                <Download className="h-4 w-4" /> PNG
+              </button>
+              <button
+                onClick={copyEmbed}
+                disabled={embedDisabled}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neon py-2.5 text-sm font-bold text-black hover:bg-neon/90 disabled:opacity-40"
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Code2 className="h-4 w-4" />} {copied ? 'Copied!' : 'Copy embed code'}
+              </button>
+            </div>
+            <p className="mt-3 text-[11px] text-white/40">
+              Embed the badge on your site to show the image was verified real by Unmask AI.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

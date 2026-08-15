@@ -99,8 +99,8 @@ export default function VideoAnalyzer() {
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && inputRef.current?.click()}
         className="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-all duration-300"
         style={{
-          background: dragging ? 'rgba(0, 200, 90, 0.08)' : 'rgba(8, 14, 11, 0.45)',
-          borderColor: dragging ? 'rgba(0, 200, 90, 0.7)' : 'rgba(0, 255, 102, 0.25)',
+          background: dragging ? 'rgba(58, 196, 224, 0.08)' : 'rgba(5, 30, 55, 0.45)',
+          borderColor: dragging ? 'rgba(58, 196, 224, 0.7)' : 'rgba(88, 221, 242, 0.25)',
         }}
       >
         <input
@@ -144,7 +144,7 @@ export default function VideoAnalyzer() {
           animate={{ opacity: 1, y: 0 }}
           onClick={run}
           disabled={running}
-          className="mt-4 flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-neon to-neon-600 px-6 py-3.5 text-sm font-bold text-black shadow-[0_0_24px_rgba(0,255,102,0.3)] transition-all hover:shadow-[0_0_32px_rgba(0,255,102,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-neon to-neon-600 px-6 py-3.5 text-sm font-bold text-black shadow-[0_0_24px_rgba(88,221,242,0.3)] transition-all hover:shadow-[0_0_32px_rgba(88,221,242,0.45)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
           {running ? t('video.scanning') : t('video.scan')}

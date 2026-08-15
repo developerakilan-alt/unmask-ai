@@ -40,18 +40,18 @@ export function ComparisonSlider({
       onPointerUp={() => (dragging.current = false)}
     >
       <img src={afterSrc} alt={afterLabel} className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-      <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/70">
+      <span className="overlay-label absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider">
         {afterLabel}
       </span>
       <div className="absolute inset-0 overflow-hidden" style={{ width: `${pos}%` }}>
         <img src={beforeSrc} alt={beforeLabel} className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-        <span className="absolute left-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/70">
+        <span className="overlay-label absolute left-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider">
           {beforeLabel}
         </span>
       </div>
-      <div className="absolute inset-y-0 z-10 w-0.5 bg-neon" style={{ left: `${pos}%`, boxShadow: '0 0 12px rgba(0,255,102,0.7)' }} />
+      <div className="absolute inset-y-0 z-10 w-0.5 bg-neon" style={{ left: `${pos}%`, boxShadow: '0 0 12px rgba(88,221,242,0.7)' }} />
       <div
-        className="absolute top-1/2 z-20 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-neon/50 bg-black/70 text-neon backdrop-blur"
+        className="overlay-label-strong absolute top-1/2 z-20 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-neon/50 bg-black/70 backdrop-blur"
         style={{ left: `${pos}%` }}
       >
         <MoveHorizontal className="h-4 w-4" />

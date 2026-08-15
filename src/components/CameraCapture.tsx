@@ -93,15 +93,15 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-black/60">
           <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
           {!ready && !error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/50">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-neon" />
-              <span className="text-xs">Starting camera…</span>
+              <span className="overlay-label text-xs">Starting camera…</span>
             </div>
           )}
           {error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
               <AlertTriangle className="h-8 w-8 text-amber-400" />
-              <p className="text-xs text-white/60">{error}</p>
+              <p className="overlay-label text-xs">{error}</p>
             </div>
           )}
         </div>
@@ -109,7 +109,7 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
         <button
           onClick={capture}
           disabled={!ready}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_24px_rgba(0,255,102,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_24px_rgba(88,221,242,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Camera className="h-4 w-4" /> Capture &amp; Analyze
         </button>

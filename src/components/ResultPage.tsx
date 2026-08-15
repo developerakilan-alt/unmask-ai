@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Download, ShieldCheck, ShieldAlert, Activity, Layers, ScanLine, Sparkles, Gauge, Fingerprint, Eye, Grid3x3, FileText, ChevronDown, ChevronUp, ImageIcon, Flag, Link2, FileDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, ShieldCheck, ShieldAlert, Activity, Layers, ScanLine, Sparkles, Gauge, Fingerprint, Eye, Grid3x3, FileText, ChevronDown, ChevronUp, ImageIcon, Flag, FileDown, BookOpen, FlaskConical, BadgeCheck, Share } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import { createShare } from '../api';
 import { useToast } from '../lib/toast';
 import { explainResult } from '../lib/explain';
+import { useCountUp } from '../lib/hooks';
 import ShareCardGenerator from './ShareCardGenerator';
+import ResultExtras from './ResultExtras';
+import { ComparisonSlider } from './ComparisonSlider';
 
 interface Indicator {
   label: string;
@@ -74,6 +77,8 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [expanded, setExpanded] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
+  const [mode, setMode] = useState<'eli5' | 'tech'>('eli5');
+  const [compare, setCompare] = useState<'side' | 'slider'>('side');
   const { push } = useToast();
   const explainer = explainResult(result.classification, result.aiPercent, result.confidence);
 
@@ -81,14 +86,14 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     ? 'border-danger/40 shadow-[0_0_40px_rgba(255,59,59,0.32)]'
     : isUncertain
       ? 'border-amber-400/40 shadow-[0_0_40px_rgba(251,191,36,0.25)]'
-      : 'border-neon/40 shadow-[0_0_40px_rgba(0,255,102,0.32)]';
+      : 'border-neon/40 shadow-[0_0_40px_rgba(88,221,242,0.32)]';
 
   const scoreBarColor = isAI ? 'bg-danger' : isUncertain ? 'bg-amber-400' : 'bg-neon';
   const scoreBarShadow = isAI
     ? '0 0 12px rgba(255,59,59,0.5)'
     : isUncertain
       ? '0 0 12px rgba(251,191,36,0.5)'
-      : '0 0 12px rgba(0,255,102,0.5)';
+      : '0 0 12px rgba(88,221,242,0.5)';
 
   const reportId = `UA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
@@ -105,13 +110,13 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     doc.rect(0, 0, pw, ph, 'F');
 
     // === Top accent bar ===
-    doc.setFillColor(0, 255, 136);
+    doc.setFillColor(88, 221, 242);
     doc.rect(0, 0, pw, 3, 'F');
 
     // === Header ===
     let y = 16;
     doc.setFontSize(24);
-    doc.setTextColor(0, 255, 136);
+    doc.setTextColor(88, 221, 242);
     doc.text('UNMASK AI', ml, y);
 
     doc.setFontSize(9);
@@ -119,7 +124,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     doc.text('IMAGE FORENSIC REPORT', pw - mr, y, { align: 'right' });
 
     y += 5;
-    doc.setDrawColor(0, 255, 136);
+    doc.setDrawColor(88, 221, 242);
     doc.setLineWidth(0.4);
     doc.line(ml, y, pw - mr, y);
 
@@ -160,7 +165,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
         mainImgH = Math.min(imgH, 95);
         doc.setFillColor(20, 28, 22);
         doc.roundedRect(ml - 1, y - 1, imgW + 2, mainImgH + 2, 2, 2, 'F');
-        doc.setDrawColor(0, 255, 136);
+        doc.setDrawColor(88, 221, 242);
         doc.setLineWidth(0.3);
         doc.roundedRect(ml - 1, y - 1, imgW + 2, mainImgH + 2, 2, 2, 'S');
         doc.addImage(dataUrl, 'JPEG', ml, y, imgW, mainImgH);
@@ -175,7 +180,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
 
     // Verdict badge
     y = 62;
-    const badgeColor: [number, number, number] = isAI ? [255, 59, 59] : isUncertain ? [251, 191, 36] : [0, 255, 136];
+    const badgeColor: [number, number, number] = isAI ? [255, 59, 59] : isUncertain ? [251, 191, 36] : [88, 221, 242];
     doc.setFillColor(...badgeColor);
     doc.roundedRect(rightX, y, 70, 11, 3, 3, 'F');
     doc.setFontSize(13);
@@ -248,13 +253,13 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
 
     // === Key Indicators Section (below image, full width) ===
     y = Math.max(imgBottomY + 2, 165);
-    doc.setDrawColor(0, 255, 136);
+    doc.setDrawColor(88, 221, 242);
     doc.setLineWidth(0.3);
     doc.line(ml, y, pw - mr, y);
     y += 5;
 
     doc.setFontSize(10);
-    doc.setTextColor(0, 255, 136);
+    doc.setTextColor(88, 221, 242);
     doc.text('KEY INDICATORS', ml, y);
     y += 6;
 
@@ -278,7 +283,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     result.indicators.forEach((ind, i) => {
       if (y > 270) return;
       const isHigh = ind.aiLikelihood >= 0.5;
-      const tagColor: [number, number, number] = isHigh ? [255, 59, 59] : [0, 255, 136];
+      const tagColor: [number, number, number] = isHigh ? [255, 59, 59] : [88, 221, 242];
       const tagBg: [number, number, number] = isHigh ? [60, 20, 20] : [15, 40, 25];
 
       // Row background
@@ -315,7 +320,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     });
 
     // === Bottom accent bar + footer ===
-    doc.setFillColor(0, 255, 136);
+    doc.setFillColor(88, 221, 242);
     doc.rect(0, ph - 12, pw, 0.3, 'F');
 
     doc.setFontSize(6);
@@ -372,10 +377,10 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const badge = isAI ? '#ff3b3b' : isUncertain ? '#fbbf24' : '#00ff88';
+    const badge = isAI ? '#ff3b3b' : isUncertain ? '#fbbf24' : '#58DDF2';
     const dim = 'rgba(255,255,255,0.55)';
 
-    ctx.fillStyle = '#0a0f0c';
+    ctx.fillStyle = '#031a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = badge;
     ctx.fillRect(0, 0, canvas.width, 8);
@@ -451,13 +456,13 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
         ctx.fillRect(48, y - 20, 1104, 34);
       }
       const high = ind.aiLikelihood >= 0.5;
-      ctx.fillStyle = high ? badge : '#00ff88';
+      ctx.fillStyle = high ? badge : '#58DDF2';
       ctx.font = '600 18px "Space Grotesk", sans-serif';
       ctx.fillText(ind.label, 64, y);
       ctx.fillStyle = dim;
       ctx.font = '15px "Space Grotesk", sans-serif';
       ctx.fillText(ind.value, 620, y);
-      ctx.fillStyle = high ? badge : '#00ff88';
+      ctx.fillStyle = high ? badge : '#58DDF2';
       ctx.font = '700 14px "Space Grotesk", sans-serif';
       ctx.fillText(high ? 'AI' : 'REAL', 1060, y);
       y += 44;
@@ -489,6 +494,19 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
     try {
       const s = await createShare(result.scanId);
       const url = `${window.location.origin}${s.share_url}`;
+      const shareable = typeof navigator.share === 'function';
+      if (shareable) {
+        try {
+          await navigator.share({
+            title: 'Unmask AI — image authenticity check',
+            text: `Unmask AI verdict: ${isAI ? 'AI-generated' : isUncertain ? 'uncertain' : 'real'} (${result.aiPercent}% AI)`,
+            url,
+          });
+          return;
+        } catch {
+          /* user cancelled — fall through to clipboard */
+        }
+      }
       await navigator.clipboard.writeText(url).catch(() => {});
       push('success', 'Share link copied', url);
     } catch (e) {
@@ -520,7 +538,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                   className={`relative h-48 w-48 overflow-hidden rounded-2xl border-2 bg-black/40 ${
                     isAI ? 'border-danger/50' : isUncertain ? 'border-amber-400/50' : 'border-neon/50'
                   }`}
-                  style={{ boxShadow: isAI ? '0 0 36px rgba(255,59,59,0.4)' : isUncertain ? '0 0 36px rgba(251,191,36,0.3)' : '0 0 36px rgba(0,255,102,0.4)' }}
+                  style={{ boxShadow: isAI ? '0 0 36px rgba(255,59,59,0.4)' : isUncertain ? '0 0 36px rgba(251,191,36,0.3)' : '0 0 36px rgba(88,221,242,0.4)' }}
                 >
                   <img src={previewUrl} alt="analyzed" className="h-full w-full object-cover" />
                   <div className={`pointer-events-none absolute inset-0 ring-1 ring-inset ${isAI ? 'ring-danger/30' : isUncertain ? 'ring-amber-400/30' : 'ring-neon/30'}`} />
@@ -539,19 +557,19 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                       ? 'rgba(255,59,59,0.4)'
                       : isUncertain
                         ? 'rgba(251,191,36,0.4)'
-                        : 'rgba(0,255,136,0.4)',
+                        : 'rgba(88,221,242,0.4)',
                   }}
                 />
                 <span
                   aria-hidden
                   className="pointer-events-none absolute -top-1 -right-2 h-2 w-2 rounded-full"
                   style={{
-                    background: isAI ? '#ff3b3b' : isUncertain ? '#fbbf24' : '#00ff88',
+                    background: isAI ? '#ff3b3b' : isUncertain ? '#fbbf24' : '#58DDF2',
                     boxShadow: isAI
                       ? '0 0 10px rgba(255,59,59,0.9)'
                       : isUncertain
                         ? '0 0 10px rgba(251,191,36,0.9)'
-                        : '0 0 10px rgba(0,255,136,0.9)',
+                        : '0 0 10px rgba(88,221,242,0.9)',
                   }}
                 />
                 <div className={`relative inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 ${
@@ -569,6 +587,12 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                   </span>
                 </div>
               </div>
+              {result.scanId && (
+                <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/10 px-3 py-1 text-[10px] font-semibold text-neon/90">
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  Unmask Verified · forensic record #{result.scanId.slice(0, 8)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -627,12 +651,69 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
             </div>
           </div>
 
-          {/* Plain-language explainer */}
+          {/* Plain-language explainer with ELI5 / Technical toggle */}
           <div className="px-5 pt-4 sm:px-7">
             <div className="glass-soft rounded-2xl p-4">
-              <p className="text-sm font-semibold text-white/90">{explainer.headline}</p>
-              <p className="mt-1.5 text-xs leading-relaxed text-white/50">{explainer.body}</p>
-              <p className="mt-2 text-[11px] leading-relaxed text-white/35">{explainer.confidenceNote}</p>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-white/90">{mode === 'eli5' ? explainer.headline : 'Technical assessment'}</p>
+                <div className="flex gap-1 rounded-lg bg-white/[0.05] p-0.5">
+                  <button
+                    onClick={() => setMode('eli5')}
+                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition ${
+                      mode === 'eli5' ? 'bg-neon/15 text-neon' : 'text-white/40 hover:text-white/70'
+                    }`}
+                    title="Plain English explanation"
+                  >
+                    <BookOpen className="h-3 w-3" /> Plain
+                  </button>
+                  <button
+                    onClick={() => setMode('tech')}
+                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition ${
+                      mode === 'tech' ? 'bg-neon/15 text-neon' : 'text-white/40 hover:text-white/70'
+                    }`}
+                    title="Technical detail"
+                  >
+                    <FlaskConical className="h-3 w-3" /> Technical
+                  </button>
+                </div>
+              </div>
+              <AnimatePresence mode="wait">
+                {mode === 'eli5' ? (
+                  <motion.div
+                    key="eli5"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                  >
+                    <p className="text-xs leading-relaxed text-white/50">{explainer.body}</p>
+                    <p className="mt-2 text-[11px] leading-relaxed text-white/35">{explainer.confidenceNote}</p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="tech"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="space-y-1.5"
+                  >
+                    <TechRow label="Model" value={result.modelUsed || 'EfficientNet-B0 + Fusion'} />
+                    <TechRow label="AI probability" value={`${result.aiPercent.toFixed(1)}%`} />
+                    <TechRow label="Real probability" value={`${result.realPercent.toFixed(1)}%`} />
+                    <TechRow label="Confidence" value={`${result.confidence.toFixed(1)}%`} />
+                    {result.processingTimeMs != null && (
+                      <TechRow label="Inference time" value={`${(result.processingTimeMs / 1000).toFixed(2)}s`} />
+                    )}
+                    {result.debug?.model && <TechRow label="Backend model" value={result.debug.model} />}
+                    {result.featureScores && Object.keys(result.featureScores).length > 0 && (
+                      <div className="pt-1">
+                        {Object.entries(result.featureScores).slice(0, 5).map(([k, v]) => (
+                          <TechBar key={k} label={k.replace(/_/g, ' ')} score={(v as number) * 100} />
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -738,11 +819,36 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                 >
                   {previewUrl ? (
                     <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] uppercase tracking-widest text-white/40">Original vs Forensic Map</p>
+                        <div className="flex gap-1 rounded-lg bg-white/[0.05] p-0.5">
+                          <button
+                            onClick={() => setCompare('side')}
+                            className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition ${compare === 'side' ? 'bg-neon/15 text-neon' : 'text-white/40 hover:text-white/70'}`}
+                          >
+                            Side by side
+                          </button>
+                          <button
+                            onClick={() => setCompare('slider')}
+                            className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition ${compare === 'slider' ? 'bg-neon/15 text-neon' : 'text-white/40 hover:text-white/70'}`}
+                          >
+                            Slider
+                          </button>
+                        </div>
+                      </div>
+                      {compare === 'slider' ? (
+                        <ComparisonSlider
+                          beforeSrc={previewUrl}
+                          afterSrc={result.heatmap ? `data:image/png;base64,${result.heatmap}` : previewUrl}
+                          beforeLabel="Original"
+                          afterLabel="Forensic Map"
+                        />
+                      ) : (
                       <div className="relative overflow-hidden rounded-2xl border border-white/10">
                         <div className="grid grid-cols-2">
                           <div className="relative">
                             <img src={previewUrl} alt="Original" className="w-full aspect-square object-cover" />
-                            <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] text-white/60 backdrop-blur-sm">Original</span>
+                            <span className="overlay-label absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px]">Original</span>
                           </div>
                           <div className="relative">
                             {result.heatmap ? (
@@ -753,10 +859,11 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                                 <div className="absolute inset-0 bg-gradient-to-br from-neon/20 via-transparent to-danger/30 mix-blend-overlay" />
                               </>
                             )}
-                            <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] text-white/60 backdrop-blur-sm">Forensic Map</span>
+                            <span className="overlay-label absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px]">Forensic Map</span>
                           </div>
                         </div>
                       </div>
+                      )}
 
                       {result.featureScores && Object.keys(result.featureScores).length > 0 && (
                         <div>
@@ -843,15 +950,19 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                       <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/50">
                         <ScanLine className="h-3.5 w-3.5 text-neon" /> Noise &amp; Sharpness
                       </p>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        <div className="rounded-xl bg-white/[0.03] p-3 text-center">
-                          <p className="text-lg font-bold text-white/85">{result.forensics.noise.noise_level.toFixed(2)}</p>
-                          <p className="text-[10px] text-white/40">Noise level</p>
-                        </div>
-                        <div className="rounded-xl bg-white/[0.03] p-3 text-center">
-                          <p className="text-lg font-bold text-white/85">{result.forensics.noise.sharpness.toFixed(1)}</p>
-                          <p className="text-[10px] text-white/40">Sharpness</p>
-                        </div>
+                      <div className="mt-2 space-y-2.5">
+                        <ForensicScore
+                          label="Sensor noise level"
+                          value={Math.min(100, result.forensics.noise.noise_level * 100)}
+                          display={`${result.forensics.noise.noise_level.toFixed(2)}`}
+                          why="Real photos carry a fine, camera-specific noise pattern. Atypical or missing noise can be a hallmark of rendered content."
+                        />
+                        <ForensicScore
+                          label="High-frequency sharpness"
+                          value={Math.min(100, result.forensics.noise.sharpness)}
+                          display={`${result.forensics.noise.sharpness.toFixed(1)}`}
+                          why="Real edges contain complex, irregular detail; generative upsampling tends to smooth or over-sharpen boundaries."
+                        />
                       </div>
                     </div>
                   )}
@@ -861,17 +972,30 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                       <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/50">
                         <Layers className="h-3.5 w-3.5 text-neon" /> Colour Statistics
                       </p>
-                      <div className="mt-2 grid grid-cols-3 gap-2">
-                        {Object.entries(result.forensics.colour.channels || {}).slice(0, 3).map(([ch, s]) => (
-                          <div key={ch} className="rounded-xl bg-white/[0.03] p-2.5 text-center">
-                            <p className="text-sm font-bold text-white/85 capitalize">{ch}</p>
-                            <p className="text-[10px] text-white/40">entropy {s.entropy?.toFixed(2)}</p>
-                          </div>
-                        ))}
+                      <div className="mt-2 space-y-2.5">
+                        <ForensicScore
+                          label="Colour entropy"
+                          value={result.forensics.colour.saturation > 0 ? Math.min(100, (result.forensics.colour.saturation * 100)) : 0}
+                          display={`${(result.forensics.colour.saturation * 100).toFixed(1)}%`}
+                          why="Colour distributions that deviate from natural scenes are a classic generative-artifact cue."
+                        />
+                        <ForensicScore
+                          label="Value / brightness profile"
+                          value={Math.min(100, result.forensics.colour.value * 100)}
+                          display={`${(result.forensics.colour.value * 100).toFixed(1)}%`}
+                          why="How light is spread across the image. Unnatural tonal balance can indicate a synthetic pipeline."
+                        />
                       </div>
-                      <p className="mt-2 text-[10px] text-white/35">
-                        Saturation {(result.forensics.colour.saturation * 100).toFixed(1)}% · Value {(result.forensics.colour.value * 100).toFixed(1)}%
-                      </p>
+                      {Object.entries(result.forensics.colour.channels || {}).length > 0 && (
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          {Object.entries(result.forensics.colour.channels || {}).slice(0, 3).map(([ch, s]) => (
+                            <div key={ch} className="rounded-xl bg-white/[0.03] p-2.5 text-center">
+                              <p className="text-sm font-bold text-white/85 capitalize">{ch}</p>
+                              <p className="text-[10px] text-white/40">entropy {s.entropy?.toFixed(2)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </motion.div>
@@ -916,7 +1040,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
               </button>
               <button
                 onClick={downloadPDF}
-                className="flex items-center justify-center gap-2 rounded-xl border border-neon/20 bg-neon/10 py-3 px-4 text-sm font-semibold text-neon transition-all hover:bg-neon/20 hover:shadow-[0_0_20px_rgba(0,255,102,0.15)]"
+                className="flex items-center justify-center gap-2 rounded-xl border border-neon/20 bg-neon/10 py-3 px-4 text-sm font-semibold text-neon transition-all hover:bg-neon/20 hover:shadow-[0_0_20px_rgba(88,221,242,0.15)]"
               >
                 <Download className="h-4 w-4" />
                 <span className="hidden sm:inline">Download</span> PDF
@@ -939,7 +1063,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
               </button>
               <button
                 onClick={onNew}
-                className="liquid-btn flex flex-1 items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_28px_rgba(0,255,102,0.4)]"
+                className="liquid-btn flex flex-1 items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_28px_rgba(88,221,242,0.4)]"
               >
                 <FileText className="h-4 w-4" />
                 New Scan
@@ -952,7 +1076,7 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
                 onClick={shareLink}
                 className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 py-2.5 text-xs font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
               >
-                <Link2 className="h-3.5 w-3.5" /> Share
+                <Share className="h-3.5 w-3.5" /> Share
               </button>
               <button
                 onClick={() => setCardOpen(true)}
@@ -970,10 +1094,63 @@ export default function ResultPage({ result, previewUrl, onNew, onBack, onReport
           </div>
         </motion.div>
 
+        <div className="mt-4">
+          <ResultExtras result={result} />
+        </div>
+
         <AnimatePresence>
           {cardOpen && <ShareCardGenerator result={result} previewUrl={previewUrl} onClose={() => setCardOpen(false)} />}
         </AnimatePresence>
       </div>
     </section>
+  );
+}
+
+function ForensicScore({ label, value, display, why }: { label: string; value: number; display: string; why: string }) {
+  const animated = useCountUp(value, true);
+  return (
+    <div className="rounded-xl bg-white/[0.03] p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold text-white/70">{label}</p>
+        <p className="text-xs font-bold text-neon">{display}</p>
+      </div>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.max(2, Math.min(100, animated))}%` }}
+          transition={{ duration: 0.9, ease: 'easeOut' }}
+          className="h-full rounded-full bg-gradient-to-r from-neon/70 to-neon"
+        />
+      </div>
+      <p className="mt-2 text-[10px] leading-relaxed text-white/35">{why}</p>
+    </div>
+  );
+}
+
+function TechRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-white/[0.04] pb-1 last:border-0">
+      <span className="text-[10px] uppercase tracking-wider text-white/35">{label}</span>
+      <span className="font-mono text-[11px] text-neon/90">{value}</span>
+    </div>
+  );
+}
+
+function TechBar({ label, score }: { label: string; score: number }) {
+  return (
+    <div>
+      <div className="mb-0.5 flex justify-between text-[10px] text-white/45">
+        <span className="capitalize">{label}</span>
+        <span className="font-mono text-neon/80">{score.toFixed(1)}%</span>
+      </div>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.max(2, Math.min(100, score))}%` }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="h-full rounded-full bg-neon/70"
+        />
+      </div>
+    </div>
   );
 }

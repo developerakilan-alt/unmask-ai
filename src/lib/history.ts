@@ -1,4 +1,5 @@
 import type { AnalysisResult } from '../api';
+import { hashDistance } from './image';
 
 /**
  * Scan history. Results are persisted to localStorage immediately so they
@@ -19,6 +20,8 @@ export interface HistoryEntry {
   local?: boolean;
   sourceUrl?: string;
   heatmap?: string;
+  phash?: string | null;
+  generator?: string | null;
 }
 
 const KEY = 'unmask-scan-history';
@@ -70,6 +73,8 @@ export async function saveResult(result: AnalysisResult): Promise<HistoryEntry> 
     local: result.local,
     sourceUrl: result.sourceUrl,
     heatmap: result.heatmap || undefined,
+    phash: result.phash ?? null,
+    generator: result.attribution?.generator ?? null,
   };
   writeAll([entry, ...readAll()].slice(0, 200));
   syncEntryToSupabase(entry);
@@ -86,4 +91,31 @@ export function clearLocalHistory(): void {
 
 export function removeLocalEntry(id: string): void {
   writeAll(readAll().filter((e) => e.id !== id));
+}
+
+/**
+ * Group history into day buckets for a timeline view. Returns entries sorted
+ * newest-first keyed by their local calendar day label.
+ */
+export function groupHistoryByDay(entries: HistoryEntry[]): { day: string; entries: HistoryEntry[] }[] {
+  const buckets = new Map<string, HistoryEntry[]>();
+  for (const e of entries) {
+    const d = new Date(e.created_at * 1000);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const arr = buckets.get(key) || [];
+    arr.push(e);
+    buckets.set(key, arr);
+  }
+  return [...buckets.entries()]
+    .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+    .map(([day, group]) => ({
+      day,
+      entries: group.sort((a, b) => b.created_at - a.created_at),
+    }));
+}
+
+/** Find entries whose perceptual hash matches a target (dHash distance <= 6). */
+export function findMatchingHistory(entries: HistoryEntry[], phash: string | null): HistoryEntry[] {
+  if (!phash) return [];
+  return entries.filter((e) => e.phash && e.phash !== phash && hashDistance(e.phash, phash) <= 6);
 }

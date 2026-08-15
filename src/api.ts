@@ -91,6 +91,14 @@ export interface AnalysisResult {
   forensics?: Forensics;
   sourceUrl?: string;
   local?: boolean;
+  /** Best-effort prediction of the generating model family (e.g. Midjourney). */
+  attribution?: {
+    generator: string | null;
+    confidence: number;
+    hints: string[];
+  };
+  /** Perceptual (dHash) fingerprint used to match resurfacing images. */
+  phash?: string | null;
 }
 
 export interface ScanRecord {
@@ -107,6 +115,8 @@ export interface ScanRecord {
   heatmap?: string;
   forensics?: Forensics;
   indicators?: Indicator[];
+  phash?: string | null;
+  generator?: string | null;
 }
 
 export interface ShareInfo {

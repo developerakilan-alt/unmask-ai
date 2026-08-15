@@ -61,6 +61,61 @@ export async function compressImage(file: File, maxDim = 1600, quality = 0.85): 
   }
 }
 
+/**
+ * dHash (difference hash) — a compact 64-bit perceptual fingerprint that is
+ * robust to rescaling, minor color shifts and mild compression. Used to spot
+ * the same image (or a near-duplicate) resurfacing in a later scan.
+ */
+export async function dHash(file: Blob): Promise<string | null> {
+  try {
+    const img = await loadImageFromFile(file as File);
+    const size = 9;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, size, size);
+    const { data } = ctx.getImageData(0, 0, size, size);
+    const gray: number[] = [];
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const p = (y * size + x) * 4;
+        gray.push(0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2]);
+      }
+    }
+    let bits = '';
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size - 1; x++) {
+        bits += gray[y * size + x] >= gray[y * size + x + 1] ? '1' : '0';
+      }
+    }
+    const hex: string[] = [];
+    for (let i = 0; i < bits.length; i += 4) {
+      hex.push(parseInt(bits.slice(i, i + 4), 2).toString(16));
+    }
+    return hex.join('');
+  } catch {
+    return null;
+  }
+}
+
+/** Hamming distance between two dHash hex strings (0 = identical). */
+export function hashDistance(a: string, b: string): number {
+  const pad = (s: string) => s.padEnd(16, '0');
+  let d = 0;
+  const ha = parseInt(pad(a), 16);
+  const hb = parseInt(pad(b), 16);
+  let v = ha ^ hb;
+  while (v) {
+    v &= v - 1;
+    d++;
+  }
+  return d;
+}
+
 export type SampleKind = 'ai' | 'real';
 
 /** Generate a plausible demo image locally with canvas (JPEG). */

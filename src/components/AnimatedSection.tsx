@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { Children, type ReactNode, useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 
 interface Props {
@@ -57,5 +57,43 @@ function Reveal({ children, className, initial, delay }: Props & { initial: { op
     >
       {children}
     </motion.div>
+  );
+}
+
+interface StaggerProps {
+  children: ReactNode;
+  className?: string;
+  /** Extra delay before the first item. */
+  delay?: number;
+  /** Seconds between each item's reveal. */
+  gap?: number;
+  direction?: 'up' | 'down' | 'left' | 'right' | 'none';
+}
+
+/**
+ * Reveals each direct child one after the other with a staggered delay, so a
+ * grid of cards cascades into view. Every item also has the never-hides
+ * safety behavior of Reveal (starts at full opacity, animates position only).
+ */
+export function StaggerGroup({ children, className = '', delay = 0, gap = 0.09, direction = 'up' }: StaggerProps) {
+  const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return <div className={className}>{children}</div>;
+
+  const offset = 24;
+  const initial = {
+    opacity: 0,
+    y: direction === 'up' ? offset : direction === 'down' ? -offset : 0,
+    x: direction === 'left' ? offset : direction === 'right' ? -offset : 0,
+  };
+
+  const items = Children.toArray(children);
+  return (
+    <div className={className}>
+      {items.map((child, i) => (
+        <Reveal key={i} initial={initial} delay={delay + i * gap}>
+          {child}
+        </Reveal>
+      ))}
+    </div>
   );
 }

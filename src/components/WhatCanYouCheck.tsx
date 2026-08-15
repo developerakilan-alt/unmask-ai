@@ -1,17 +1,19 @@
 import { AnimatedSection } from './AnimatedSection';
 import { Sparkles, Eye, ShieldCheck, Activity, ShieldAlert, Fingerprint } from 'lucide-react';
 
+const ASSET = (name: string) => `${import.meta.env.BASE_URL}images/${name}`;
+
 const USE_CASES = [
   {
     title: 'AI-Generated Art',
     desc: 'Detect images created by DALL-E, Midjourney, Stable Diffusion, and other AI art generators.',
-    img: '/images/ai-art.svg',
+    img: ASSET('ai-art.svg'),
     icon: Sparkles,
   },
   {
     title: 'Deepfake Photos',
     desc: 'Identify face-swapped or AI-manipulated portraits used for deception.',
-    img: '/images/deepfake.svg',
+    img: ASSET('deepfake.svg'),
     icon: Eye,
   },
   {
@@ -29,7 +31,7 @@ const USE_CASES = [
   {
     title: 'News & Journalism',
     desc: 'Verify the authenticity of images used in news articles and reports.',
-    img: '/images/news.svg',
+    img: ASSET('news.svg'),
     icon: ShieldAlert,
   },
   {
@@ -51,7 +53,7 @@ export default function WhatCanYouCheck() {
         <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {USE_CASES.map((uc, i) => (
             <AnimatedSection key={uc.title} delay={i * 80}>
-              <div className="glass group overflow-hidden rounded-2xl transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(0,255,102,0.1)] hover:-translate-y-1">
+              <div className="glass group overflow-hidden rounded-2xl transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(88,221,242,0.1)] hover:-translate-y-1">
                 <div className="relative aspect-square w-full overflow-hidden sm:h-44 sm:aspect-auto">
                   <img
                     src={uc.img}
@@ -61,7 +63,7 @@ export default function WhatCanYouCheck() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                   <span className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-lg border border-neon/30 bg-black/40 backdrop-blur-sm sm:top-3 sm:right-3 sm:h-8 sm:w-8">
-                    <uc.icon className="h-3 w-3 text-neon sm:h-4 sm:w-4" />
+                    <uc.icon className="overlay-label-strong h-3 w-3 sm:h-4 sm:w-4" />
                   </span>
                 </div>
                 <div className="px-3 py-3 sm:px-5 sm:py-4">

@@ -1,4 +1,5 @@
 import type { AnalysisResult } from '../api';
+import { computeSpectral } from './spectral';
 
 /**
  * Client-side "Quick Scan" forensics.
@@ -25,6 +26,7 @@ export interface LocalStats {
   blockiness: number;
   smoothness: number;
   aiLike: number;
+  spectral: ReturnType<typeof computeSpectral>;
 }
 
 const MAX_SIDE = 512;
@@ -151,6 +153,51 @@ function hasExif(bytes: Uint8Array): boolean {
   return head.includes('Exif\x00\x00');
 }
 
+/** Parse common camera tags (Make/Model/DateTimeOriginal/Software) from the EXIF block. */
+function parseExifTags(bytes: Uint8Array): Record<string, string> {
+  const tags: Record<string, string> = {};
+  const find = (needle: Uint8Array, from = 0): number => {
+    outer: for (let i = from; i + needle.length <= bytes.length; i++) {
+      for (let j = 0; j < needle.length; j++) if (bytes[i + j] !== needle[j]) continue outer;
+      return i;
+    }
+    return -1;
+  };
+  const exifIdx = find(new TextEncoder().encode('Exif\x00\x00'));
+  if (exifIdx < 0) return tags;
+  const tiff = exifIdx + 6;
+  if (tiff + 4 > bytes.length) return tags;
+  const le = bytes[tiff] === 0x49;
+  const u16 = (off: number) => (le ? bytes[off] | (bytes[off + 1] << 8) : (bytes[off] << 8) | bytes[off + 1]);
+  const u32 = (off: number) => (le ? bytes[off] | (bytes[off + 1] << 8) | (bytes[off + 2] << 16) | (bytes[off + 3] << 24) : ((bytes[off] << 24) | (bytes[off + 1] << 16) | (bytes[off + 2] << 8) | bytes[off + 3]) >>> 0);
+  const ifd0 = tiff + u32(tiff + 4);
+  if (ifd0 + 2 > bytes.length) return tags;
+  const count = u16(ifd0);
+  const entry = ifd0 + 2;
+  const ascii = (valOff: number, len: number): string => {
+    const end = Math.min(valOff + len, bytes.length);
+    let s = '';
+    for (let i = valOff; i < end; i++) {
+      const c = bytes[i];
+      if (c === 0) break;
+      s += String.fromCharCode(c);
+    }
+    return s.trim();
+  };
+  for (let i = 0; i < count && i < 64; i++) {
+    const e = entry + i * 12;
+    if (e + 12 > bytes.length) break;
+    const tag = u16(e);
+    const type = u16(e + 2);
+    const len = u32(e + 4);
+    if (tag === 0x010f && type === 2) tags.Make = ascii(tiff + u32(e + 8), len);
+    if (tag === 0x0110 && type === 2) tags.Model = ascii(tiff + u32(e + 8), len);
+    if (tag === 0x0131 && type === 2) tags.Software = ascii(tiff + u32(e + 8), len);
+    if (tag === 0x9003 && type === 2) tags.DateTimeOriginal = ascii(tiff + u32(e + 8), len);
+  }
+  return tags;
+}
+
 function detectExif(file: Blob): Promise<{ present: boolean; note?: string; tags: Record<string, string> }> {
   return new Promise((resolve) => {
     if (file.type && !/jpe?g|tiff/i.test(file.type) && !/\.(jpe?g|tiff?)$/i.test((file as File).name || '')) {
@@ -161,9 +208,16 @@ function detectExif(file: Blob): Promise<{ present: boolean; note?: string; tags
     reader.onerror = () => resolve({ present: false, note: 'Could not read metadata', tags: {} });
     reader.onload = () => {
       const bytes = new Uint8Array(reader.result as ArrayBuffer);
-      resolve({ present: hasExif(bytes), note: hasExif(bytes) ? 'EXIF block found' : 'No EXIF metadata found', tags: {} });
+      const present = hasExif(bytes);
+      const tags = present ? parseExifTags(bytes) : {};
+      const camera = tags.Make ? `${tags.Make}${tags.Model ? ' ' + tags.Model : ''}` : '';
+      resolve({
+        present,
+        note: present ? (camera ? `EXIF found · camera ${camera}` : 'EXIF block found') : 'No EXIF metadata found',
+        tags,
+      });
     };
-    reader.readAsArrayBuffer(file.slice(0, 131072));
+    reader.readAsArrayBuffer(file.slice(0, 262144));
   });
 }
 
@@ -194,6 +248,7 @@ export async function computeStats(file: Blob): Promise<LocalStats> {
   const noise = flatRegionNoise(gray, w, h);
   const block = blockiness(gray, w, h);
   const color = colorStats(data, w, h);
+  const spectral = computeSpectral(gray, w, h);
   const exif = await detectExif(file);
 
   const normalizedNoise = Math.min(1, noise / 22);
@@ -220,6 +275,7 @@ export async function computeStats(file: Blob): Promise<LocalStats> {
     blockiness: block,
     smoothness,
     aiLike,
+    spectral,
   };
 }
 
@@ -227,16 +283,61 @@ function sigmoid(x: number): number {
   return 1 / (1 + Math.exp(-12 * (x - 0.5)));
 }
 
+/**
+ * Best-effort generator attribution. Only meaningful when the image leans
+ * AI; confidence is deliberately capped low so it is never mistaken for a
+ * verified identification.
+ */
+function attributeGenerator(stats: LocalStats): { generator: string | null; confidence: number; hints: string[] } {
+  if (stats.aiLike < 0.58) return { generator: null, confidence: 0, hints: [] };
+
+  const s = stats.spectral;
+  const hints: string[] = [];
+  const sharpNorm = Math.min(1, stats.noise.sharpness / 2000);
+  const blockScore = Math.min(1, Math.max(0, (stats.blockiness - 1.05) / 0.35));
+
+  const ganCue = s.gridPeak > 1.28 ? Math.min(1, (s.gridPeak - 1.28) / 0.6) : 0;
+  if (s.gridPeak > 1.28) hints.push('periodic 8px grid energy suggests GAN-style tiling artifacts');
+
+  const dalleScore = s.lowBand * 0.55 + stats.colour.chromaUniformity * 0.25 + stats.smoothness * 0.2;
+  if (s.lowBand > 0.45) hints.push('unusually smooth low-frequency spectrum, typical of DALL-E-style renders');
+
+  const midjourneyScore = stats.colour.saturation * 0.45 + stats.smoothness * 0.35 + (1 - blockScore) * 0.2;
+  if (stats.colour.saturation > 0.34) hints.push('high colour saturation is common in Midjourney outputs');
+
+  const sdScore = blockScore * 0.4 + sharpNorm * 0.3 + (1 - stats.colour.chromaUniformity) * 0.3;
+  if (blockScore > 0.6) hints.push('elevated 8px DCT blockiness points to SDXL-class over-sharpening');
+
+  let generator: string | null = null;
+  if (ganCue > 0.6) {
+    generator = 'GAN (StyleGAN/DCGAN)';
+    hints.unshift('strong periodic texture signature dominates');
+  } else {
+    const best = Math.max(dalleScore, midjourneyScore, sdScore);
+    if (best < 0.34) {
+      return { generator: null, confidence: 0, hints: [] };
+    }
+    if (best === dalleScore) generator = 'DALL-E';
+    else if (best === midjourneyScore) generator = 'Midjourney';
+    else generator = 'Stable Diffusion / SDXL';
+  }
+
+  const spread = Math.max(dalleScore, midjourneyScore, sdScore) - Math.min(dalleScore, midjourneyScore, sdScore);
+  const confidence = Math.min(60, Math.round(30 + spread * 45 + ganCue * 25));
+  return { generator, confidence, hints: hints.slice(0, 3) };
+}
+
 function indicator(label: string, value: string, aiLikelihood: number, detail: string) {
   return { label, value, aiLikelihood, detail };
 }
 
-export function buildLocalResult(stats: LocalStats, elapsed: number): AnalysisResult {
+export function buildLocalResult(stats: LocalStats, elapsed: number, phash?: string | null): AnalysisResult {
   const p = sigmoid(stats.aiLike);
   const aiPercent = Math.round(p * 100);
   const classification: AnalysisResult['classification'] = aiPercent >= 62 ? 'AI_GENERATED' : aiPercent <= 38 ? 'REAL' : 'UNCERTAIN';
   const verdict: AnalysisResult['verdict'] = classification === 'AI_GENERATED' ? 'ai' : classification === 'REAL' ? 'real' : 'uncertain';
-  const confidence = Math.min(70, Math.round(42 + 26 * Math.abs(aiPercent - 50) / 50));
+  const confidence = Math.min(75, Math.round(42 + 33 * Math.abs(aiPercent - 50) / 50));
+  const attribution = attributeGenerator(stats);
 
   const indicators = [
     indicator('Sensor noise signature', `${stats.noise.noise_level.toFixed(2)}`, 1 - stats.smoothness, 'Flat-region pixel variance. Real sensors add noise; AI renders are often unnaturally smooth.'),
@@ -263,6 +364,8 @@ export function buildLocalResult(stats: LocalStats, elapsed: number): AnalysisRe
     },
     modelUsed: 'Unmask AI · Quick Scan (on-device)',
     processingTimeMs: elapsed,
+    attribution,
+    phash: phash ?? null,
     debug: {
       prediction: classification,
       confidence,
@@ -282,7 +385,9 @@ export function buildLocalResult(stats: LocalStats, elapsed: number): AnalysisRe
 export async function localDetectImage(file: Blob): Promise<AnalysisResult> {
   const start = Date.now();
   const stats = await computeStats(file);
-  return buildLocalResult(stats, Date.now() - start);
+  const { dHash } = await import('./image');
+  const phash = await dHash(file);
+  return buildLocalResult(stats, Date.now() - start, phash);
 }
 
 /** Average the Quick Scan across several frames (e.g. video frames). */
@@ -305,6 +410,13 @@ export async function localDetectFrames(frames: Blob[], file: Blob): Promise<Ana
     blockiness: avg((s) => s.blockiness),
     smoothness: avg((s) => s.smoothness),
     aiLike: avg((s) => s.aiLike),
+    spectral: {
+      lowBand: avg((s) => s.spectral.lowBand),
+      midBand: avg((s) => s.spectral.midBand),
+      highBand: avg((s) => s.spectral.highBand),
+      gridPeak: avg((s) => s.spectral.gridPeak),
+      rolloff: avg((s) => s.spectral.rolloff),
+    },
   };
 
   const result = buildLocalResult(stats, Date.now() - start);
