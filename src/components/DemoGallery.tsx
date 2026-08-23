@@ -61,7 +61,7 @@ export default function DemoGallery({ onFile, onClose }: DemoGalleryProps) {
               key={s.kind}
               onClick={() => pick(s.kind)}
               disabled={loading !== null}
-              className={`glass group relative overflow-hidden rounded-2xl border-2 ${s.accent} p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_28px_rgba(88,221,242,0.15)] disabled:cursor-wait disabled:opacity-70`}
+              className={`glass group relative overflow-hidden rounded-2xl border-2 ${s.accent} p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_28px_rgba(52, 211, 153,0.15)] disabled:cursor-wait disabled:opacity-70`}
             >
               <div className="grid h-12 w-12 place-items-center rounded-xl border border-neon/20 bg-neon/10">
                 {loading === s.kind ? (

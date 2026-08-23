@@ -4,7 +4,7 @@ const COLUMNS = [
   {
     title: 'Product',
     links: [
-      { label: 'Features', href: '#features' },
+      { label: 'Features', href: '#/features' },
       { label: 'Technology', href: '#technology' },
       { label: 'AI Detector', href: '#detector' },
       { label: 'API', href: '#api' },
@@ -33,15 +33,14 @@ const COLUMNS = [
 
 export default function Footer() {
   return (
-    <footer id="contact" className="relative z-10 px-4 pb-10 pt-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="glass relative overflow-hidden rounded-[36px]">
+    <footer id="contact" className="relative z-10 pb-10 pt-6">
+      <div className="glass relative w-full overflow-hidden rounded-none">
           {/* top highlight + sheen */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
           <div className="pointer-events-none absolute -top-20 left-1/2 h-40 w-[70%] -translate-x-1/2 rounded-[100%] bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -right-16 top-10 h-48 w-48 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(184,248,255,0.35),rgba(88,221,242,0.05)_60%,transparent)] blur-2xl" />
+          <div className="pointer-events-none absolute -right-16 top-10 h-48 w-48 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(209, 250, 229,0.35),rgba(52, 211, 153,0.05)_60%,transparent)] blur-2xl" />
 
-          <div className="relative px-8 py-12 sm:px-12">
+          <div className="relative px-8 py-12 sm:sm:px-12">
             <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
               {/* Brand column */}
               <div className="lg:col-span-2">
@@ -58,13 +57,13 @@ export default function Footer() {
                   Pixel-level forensic analysis to detect AI-generated images. Built for researchers, journalists, and investigators.
                 </p>
                 <div className="mt-6 flex gap-2.5">
-                  <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="glass-pill grid h-9 w-9 place-items-center rounded-full text-white/50 transition-all hover:border-white/60 hover:text-white hover:shadow-[0_0_18px_rgba(88,221,242,0.3)]" aria-label="GitHub">
+                  <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="glass-pill grid h-9 w-9 place-items-center rounded-full text-white/50 transition-all hover:border-white/60 hover:text-white hover:shadow-[0_0_18px_rgba(52, 211, 153,0.3)]" aria-label="GitHub">
                     <Github className="h-4 w-4" />
                   </a>
-                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="glass-pill grid h-9 w-9 place-items-center rounded-full text-white/50 transition-all hover:border-white/60 hover:text-white hover:shadow-[0_0_18px_rgba(88,221,242,0.3)]" aria-label="LinkedIn">
+                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="glass-pill grid h-9 w-9 place-items-center rounded-full text-white/50 transition-all hover:border-white/60 hover:text-white hover:shadow-[0_0_18px_rgba(52, 211, 153,0.3)]" aria-label="LinkedIn">
                     <Linkedin className="h-4 w-4" />
                   </a>
-                  <a href="mailto:contact@unmask.ai" className="glass-pill grid h-9 w-9 place-items-center rounded-full text-white/50 transition-all hover:border-white/60 hover:text-white hover:shadow-[0_0_18px_rgba(88,221,242,0.3)]" aria-label="Email">
+                  <a href="mailto:contact@unmask.ai" className="glass-pill grid h-9 w-9 place-items-center rounded-full text-white/50 transition-all hover:border-white/60 hover:text-white hover:shadow-[0_0_18px_rgba(52, 211, 153,0.3)]" aria-label="Email">
                     <Mail className="h-4 w-4" />
                   </a>
                 </div>
@@ -90,7 +89,7 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="relative border-t border-white/15">
-            <div className="flex flex-col items-center gap-3 px-8 py-5 sm:flex-row sm:justify-between sm:px-12">
+            <div className="flex flex-col items-center gap-3 px-8 py-5 sm:flex-row sm:justify-between sm:sm:px-12">
               <p className="text-xs text-white/40">&copy; {new Date().getFullYear()} Unmask AI. All rights reserved.</p>
               <p className="text-xs text-white/40">
                 Built with <span className="text-neon/70">React</span>,{' '}
@@ -112,7 +111,6 @@ export default function Footer() {
             </div>
           </div>
         </div>
-      </div>
     </footer>
   );
 }

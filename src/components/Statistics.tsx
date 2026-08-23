@@ -56,9 +56,9 @@ export default function Statistics() {
   return (
     <section className="relative z-10 px-4 pb-16">
       <div className="mx-auto max-w-5xl">
-        <StaggerGroup className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5">
+        <StaggerGroup className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:sm:gap-5">
           {STATS.map((stat) => (
-            <div key={stat.label} className="glass group relative overflow-hidden rounded-[24px] p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-white/60 hover:shadow-[0_16px_44px_rgba(2,14,28,0.5),0_0_28px_rgba(88,221,242,0.2)] sm:p-6">
+            <div key={stat.label} className="glass group relative overflow-hidden rounded-[24px] p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-white/60 hover:shadow-[0_16px_44px_rgba(0, 0, 0,0.5),0_0_28px_rgba(52, 211, 153,0.2)] sm:p-6">
               {/* glass top highlight */}
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/60" />
               <div className="pointer-events-none absolute -top-8 left-1/2 h-16 w-3/4 -translate-x-1/2 rounded-[100%] bg-white/10 blur-xl" />

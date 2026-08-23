@@ -1,10 +1,16 @@
 import { useEffect, type ReactNode } from 'react';
 import Lenis from 'lenis';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /**
- * Lenis-powered buttery smooth scrolling. Respects prefers-reduced-motion.
- * Native anchor links (#section) are intercepted and scrolled smoothly with
- * a navbar offset; hash-route links (#/dashboard) are left untouched.
+ * Lenis-powered buttery smooth scrolling, synced with GSAP ScrollTrigger so
+ * scroll-driven animations track the eased scroll position. Respects
+ * prefers-reduced-motion. Native anchor links (#section) are intercepted and
+ * scrolled smoothly with a navbar offset; hash-route links (#/dashboard) are
+ * left untouched.
  */
 export function SmoothScroll({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -17,12 +23,13 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
       wheelMultiplier: 1,
     });
 
-    let raf = 0;
-    const loop = (time: number) => {
-      lenis.raf(time);
-      raf = requestAnimationFrame(loop);
+    lenis.on('scroll', ScrollTrigger.update);
+
+    const tick = (time: number) => {
+      lenis.raf(time * 1000);
     };
-    raf = requestAnimationFrame(loop);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
 
     const onClick = (e: MouseEvent) => {
       const anchor = (e.target as HTMLElement).closest?.('a[href^="#"]');
@@ -36,9 +43,13 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     };
     document.addEventListener('click', onClick);
 
+    const onLoad = () => ScrollTrigger.refresh();
+    window.addEventListener('load', onLoad);
+
     return () => {
       document.removeEventListener('click', onClick);
-      cancelAnimationFrame(raf);
+      window.removeEventListener('load', onLoad);
+      gsap.ticker.remove(tick);
       lenis.destroy();
     };
   }, []);

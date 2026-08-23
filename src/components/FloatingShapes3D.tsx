@@ -42,8 +42,8 @@ export default function FloatingShapes3D({ className = '' }: FloatingShapes3DPro
     const group = new THREE.Group();
     scene.add(group);
 
-    const wireMat = new THREE.MeshBasicMaterial({ color: 0x58ddf2, wireframe: true, transparent: true, opacity: 0.16 });
-    const solidMat = new THREE.MeshBasicMaterial({ color: 0x58ddf2, transparent: true, opacity: 0.045 });
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0x14b8a6, wireframe: true, transparent: true, opacity: 0.16 });
+    const solidMat = new THREE.MeshBasicMaterial({ color: 0x14b8a6, transparent: true, opacity: 0.045 });
 
     const geos = [
       new THREE.IcosahedronGeometry(1, 1),

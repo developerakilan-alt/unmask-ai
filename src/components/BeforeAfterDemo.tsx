@@ -61,7 +61,7 @@ export default function BeforeAfterDemo() {
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {STEPS.map((step, i) => (
             <AnimatedSection key={step.title} delay={i * 150}>
-              <div className="glass group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(88,221,242,0.1)] h-full flex flex-col">
+              <div className="glass group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(52, 211, 153,0.1)] h-full flex flex-col">
                 <div className="mb-4 flex items-center gap-3">
                   <div className="grid h-10 w-10 place-items-center rounded-xl border border-neon/20 bg-neon/10 transition-all group-hover:scale-110">
                     <step.icon className="h-5 w-5 text-neon" />

@@ -25,7 +25,7 @@ export default function WaitlistModal({ onClose, source = 'site' }: { onClose: (
 
   return (
     <ModalShell label="Join the waitlist" onClose={onClose}>
-      <div className="pointer-events-auto relative w-full max-w-md rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-7 shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-auto relative w-full max-w-md rounded-3xl border border-white/10 bg-[#071009]/95 p-7 shadow-2xl backdrop-blur-xl">
         <button
           onClick={onClose}
           aria-label="Close"

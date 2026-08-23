@@ -19,6 +19,9 @@ export default function HeroParticles() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Declared before `animate` is ever invoked so reduced-motion users never
+    // hit a temporal-dead-zone reference.
+    let visible = true;
     let animId = 0;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const particles: Particle[] = [];
@@ -86,7 +89,7 @@ export default function HeroParticles() {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(88, 221, 242, ${alpha})`;
+            ctx.strokeStyle = `rgba(52, 211, 153, ${alpha})`;
             ctx.lineWidth = 0.8;
             ctx.stroke();
           }
@@ -97,7 +100,7 @@ export default function HeroParticles() {
       for (const p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(88, 221, 242, ${p.alpha})`;
+        ctx.fillStyle = `rgba(52, 211, 153, ${p.alpha})`;
         ctx.fill();
       }
 
@@ -114,7 +117,6 @@ export default function HeroParticles() {
 
     // Only animate while the hero is on screen; stop when scrolled past so the
     // canvas never competes with page scrolling.
-    let visible = true;
     const io = new IntersectionObserver(
       ([entry]) => {
         visible = entry.isIntersecting;

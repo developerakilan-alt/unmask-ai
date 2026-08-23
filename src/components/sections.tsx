@@ -97,7 +97,7 @@ export function TechSection() {
           {TECH.map((t, i) => (
             <div
               key={t.title}
-              className={`glass group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:border-neon/30 hover:shadow-[0_0_28px_rgba(88,221,242,0.15)] ${
+              className={`glass group rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:border-neon/30 hover:shadow-[0_0_28px_rgba(52, 211, 153,0.15)] ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
               }`}
               style={{ transitionDelay: `${i * 60}ms` }}
@@ -378,7 +378,7 @@ export function CtaSection({ onUpload }: { onUpload: () => void }) {
   return (
     <section className="px-4 pb-24">
       <div ref={ref} className={`mx-auto max-w-3xl transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-        <div className="glass rounded-3xl px-6 py-12 text-center sm:px-12">
+        <div className="glass rounded-3xl px-6 py-12 text-center sm:sm:px-12">
           <Camera className="mx-auto h-10 w-10 text-neon" strokeWidth={1.8} />
           <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Verify any image in seconds
@@ -388,7 +388,7 @@ export function CtaSection({ onUpload }: { onUpload: () => void }) {
           </p>
           <button
             onClick={onUpload}
-            className="liquid-btn mt-7 inline-flex items-center gap-2.5 rounded-2xl bg-neon px-7 py-3.5 text-base font-bold text-black transition-all hover:shadow-[0_0_32px_rgba(88,221,242,0.45)]"
+            className="liquid-btn mt-7 inline-flex items-center gap-2.5 rounded-2xl bg-neon px-7 py-3.5 text-base font-bold text-black transition-all hover:shadow-[0_0_32px_rgba(52, 211, 153,0.45)]"
           >
             Analyze an Image
           </button>

@@ -72,11 +72,11 @@ export async function rowsToPdfBlob(rows: ExportRow[]): Promise<Blob> {
 
   doc.setFillColor(6, 24, 42);
   doc.rect(0, 0, pw, 297, 'F');
-  doc.setFillColor(88, 221, 242);
+  doc.setFillColor(45, 212, 191);
   doc.rect(0, 0, pw, 3, 'F');
 
   doc.setFontSize(20);
-  doc.setTextColor(88, 221, 242);
+  doc.setTextColor(45, 212, 191);
   doc.text('UNMASK AI — ANALYSIS EXPORT', ml, 18);
   doc.setFontSize(8);
   doc.setTextColor(150, 190, 205);
@@ -84,7 +84,7 @@ export async function rowsToPdfBlob(rows: ExportRow[]): Promise<Blob> {
 
   const colors: Record<string, [number, number, number]> = {
     AI_GENERATED: [255, 59, 59],
-    REAL: [88, 221, 242],
+    REAL: [52, 211, 153],
     UNCERTAIN: [251, 191, 36],
     error: [120, 130, 140],
   };
@@ -96,7 +96,7 @@ export async function rowsToPdfBlob(rows: ExportRow[]): Promise<Blob> {
       doc.addPage();
       doc.setFillColor(6, 24, 42);
       doc.rect(0, 0, pw, 297, 'F');
-      doc.setFillColor(88, 221, 242);
+      doc.setFillColor(45, 212, 191);
       doc.rect(0, 0, pw, 3, 'F');
       y = 14;
     }

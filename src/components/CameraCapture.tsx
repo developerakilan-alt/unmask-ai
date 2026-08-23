@@ -109,7 +109,7 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
         <button
           onClick={capture}
           disabled={!ready}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_24px_rgba(88,221,242,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_24px_rgba(52, 211, 153,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Camera className="h-4 w-4" /> Capture &amp; Analyze
         </button>

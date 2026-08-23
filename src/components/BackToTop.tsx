@@ -29,7 +29,7 @@ export default function BackToTop() {
           onClick={scrollTop}
           aria-label="Back to top"
           data-no-ripple="true"
-          className="glass-btn fixed bottom-6 right-6 z-[60] grid h-12 w-12 place-items-center rounded-full shadow-[0_0_24px_rgba(88,221,242,0.3)] hover:shadow-[0_0_36px_rgba(88,221,242,0.5)]"
+          className="glass-btn fixed bottom-6 right-6 z-[60] grid h-12 w-12 place-items-center rounded-full shadow-[0_0_24px_rgba(52, 211, 153,0.3)] hover:shadow-[0_0_36px_rgba(52, 211, 153,0.5)]"
         >
           <ArrowUp className="h-5 w-5 text-neon" strokeWidth={2.5} />
         </motion.button>

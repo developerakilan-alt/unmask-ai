@@ -50,10 +50,10 @@ export default function WhatCanYouCheck() {
           <h2 className="text-center text-3xl font-bold tracking-tight text-white sm:text-4xl">What Can You Check?</h2>
           <p className="mx-auto mt-3 max-w-lg text-center text-sm text-white/50">Unmask AI can analyze a wide range of image types for AI-generated content.</p>
         </AnimatedSection>
-        <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-2 sm:sm:gap-5 lg:grid-cols-3">
           {USE_CASES.map((uc, i) => (
             <AnimatedSection key={uc.title} delay={i * 80}>
-              <div className="glass group overflow-hidden rounded-2xl transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(88,221,242,0.1)] hover:-translate-y-1">
+              <div className="glass group overflow-hidden rounded-2xl transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(52, 211, 153,0.1)] hover:-translate-y-1">
                 <div className="relative aspect-square w-full overflow-hidden sm:h-44 sm:aspect-auto">
                   <img
                     src={uc.img}

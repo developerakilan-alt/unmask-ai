@@ -73,7 +73,7 @@ export default function PricingModal({ open, onClose }: { open: boolean; onClose
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3 }}
             onClick={(e) => e.stopPropagation()}
-            className="glass max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl p-6 sm:p-8"
+            className="glass max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl p-6 sm:sm:p-8"
           >
             <div className="mb-6 flex items-center justify-between">
               <h2 className="flex items-center gap-2.5 text-xl font-bold text-white">
@@ -106,7 +106,7 @@ export default function PricingModal({ open, onClose }: { open: boolean; onClose
                   <div
                     key={plan.id}
                     className={`relative flex flex-col rounded-2xl border bg-white/[0.03] p-5 ${
-                      highlight ? 'border-neon/40 shadow-[0_0_20px_rgba(88,221,242,0.2)]' : 'border-white/10'
+                      highlight ? 'border-neon/40 shadow-[0_0_20px_rgba(52, 211, 153,0.2)]' : 'border-white/10'
                     }`}
                   >
                     {highlight && (
@@ -136,7 +136,7 @@ export default function PricingModal({ open, onClose }: { open: boolean; onClose
                         disabled
                           ? 'cursor-not-allowed bg-white/[0.06] text-white/30'
                           : highlight
-                            ? 'bg-neon text-black hover:bg-neon/90 hover:shadow-[0_0_20px_rgba(88,221,242,0.4)]'
+                            ? 'bg-neon text-black hover:bg-neon/90 hover:shadow-[0_0_20px_rgba(52, 211, 153,0.4)]'
                             : 'border border-white/10 text-white/70 hover:bg-white/5 hover:text-white'
                       }`}
                     >

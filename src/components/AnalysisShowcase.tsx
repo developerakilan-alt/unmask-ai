@@ -35,12 +35,12 @@ export function AnalysisShowcase() {
 
         <AnimatedSection delay={120}>
           {/* Large glass container */}
-          <TiltCard max={4} glow className="mt-12 rounded-[36px]">
-            <div className="glass relative overflow-hidden rounded-[36px]">
+          <TiltCard max={4} glow className="mt-12 rounded-[30px]">
+            <div className="glass relative overflow-hidden rounded-[30px]">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
             <div className="pointer-events-none absolute -top-20 left-1/2 h-44 w-[70%] -translate-x-1/2 rounded-[100%] bg-white/10 blur-3xl" />
 
-            <div className="relative grid gap-8 p-8 sm:p-12 lg:grid-cols-2 lg:gap-12">
+            <div className="relative grid gap-8 p-8 sm:sm:p-12 lg:grid-cols-2 lg:lg:gap-12">
               {/* Left — AI analysis pipeline */}
               <div>
                 <div className="flex items-center gap-2.5">
@@ -70,7 +70,7 @@ export function AnalysisShowcase() {
 
               {/* Right — inner glass panel with forensic results */}
               <div className="flex">
-                <div className="glass-soft relative w-full overflow-hidden rounded-[28px] p-6">
+                <div className="glass-soft relative w-full overflow-hidden rounded-[24px] p-6">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/60" />
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/55">Forensic Results</p>
@@ -82,12 +82,12 @@ export function AnalysisShowcase() {
                   <div className="mt-6">
                     <div className="flex items-end justify-between">
                       <p className="text-sm text-white/60">AI Probability</p>
-                      <p className="text-3xl font-bold text-neon" style={{ textShadow: '0 0 20px rgba(88,221,242,0.4)' }}>
+                      <p className="text-3xl font-bold text-neon" style={{ textShadow: '0 0 20px rgba(52, 211, 153,0.4)' }}>
                         72.8%
                       </p>
                     </div>
                     <div className="mt-3 h-3 overflow-hidden rounded-full border border-white/15 bg-ink/50">
-                      <div className="h-full w-[72.8%] rounded-full bg-gradient-to-r from-neon/50 via-neon to-neon-200 shadow-[0_0_14px_rgba(88,221,242,0.7)]" />
+                      <div className="h-full w-[72.8%] rounded-full bg-gradient-to-r from-neon/50 via-neon to-neon-200 shadow-[0_0_14px_rgba(52, 211, 153,0.7)]" />
                     </div>
                   </div>
 
@@ -135,10 +135,10 @@ export function ReportPreview() {
         </AnimatedSection>
 
         <AnimatedSection delay={120}>
-          <div className="glass relative mt-12 overflow-hidden rounded-[36px]">
+          <div className="glass relative mt-12 overflow-hidden rounded-[30px]">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
 
-            <div className="relative p-8 sm:p-10">
+            <div className="relative p-8 sm:sm:p-10">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <span className="grid h-10 w-10 place-items-center rounded-2xl border border-white/30 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
@@ -164,8 +164,8 @@ export function ReportPreview() {
                 <div className="glass-soft relative flex items-center justify-center overflow-hidden rounded-[24px] p-4">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/60" />
                   <div className="relative grid aspect-square w-full place-items-center">
-                    <div className="absolute inset-0 rounded-2xl bg-[conic-gradient(from_120deg,rgba(88,221,242,0.35),rgba(3,23,46,0.2),rgba(88,221,242,0.35),rgba(3,23,46,0.2),rgba(88,221,242,0.35))] blur-md" />
-                    <div className="relative grid h-28 w-28 place-items-center rounded-2xl border border-white/40 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_30px_rgba(88,221,242,0.25)]">
+                    <div className="absolute inset-0 rounded-2xl bg-[conic-gradient(from_120deg,rgba(52, 211, 153,0.35),rgba(0, 0, 0,0.2),rgba(52, 211, 153,0.35),rgba(0, 0, 0,0.2),rgba(52, 211, 153,0.35))] blur-md" />
+                    <div className="relative grid h-28 w-28 place-items-center rounded-2xl border border-white/40 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_30px_rgba(52, 211, 153,0.25)]">
                       <ScanSearch className="h-10 w-10 text-neon" />
                     </div>
                     <span className="glass-pill absolute bottom-2 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-neon">
@@ -189,7 +189,7 @@ export function ReportPreview() {
                         <p className="text-xl font-bold text-neon">72.8%</p>
                       </div>
                       <div className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/15 bg-ink/50">
-                        <div className="h-full w-[72.8%] rounded-full bg-gradient-to-r from-neon/50 via-neon to-neon-200 shadow-[0_0_12px_rgba(88,221,242,0.7)]" />
+                        <div className="h-full w-[72.8%] rounded-full bg-gradient-to-r from-neon/50 via-neon to-neon-200 shadow-[0_0_12px_rgba(52, 211, 153,0.7)]" />
                       </div>
                     </div>
                   </div>

@@ -67,7 +67,7 @@ export default function HeatmapOverlay({ progress }: HeatmapOverlayProps) {
       const pulse = 0.7 + 0.3 * Math.sin(i * 1.7 + progress / 14);
       const alpha = 0.16 * pulse + (i / blobs.length) * 0.12;
       const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      const color = b.cool ? '88, 221, 242' : '255, 96, 96';
+      const color = b.cool ? '45, 212, 191' : '255, 96, 96';
       g.addColorStop(0, `rgba(${color}, ${alpha})`);
       g.addColorStop(1, `rgba(${color}, 0)`);
       ctx.fillStyle = g;

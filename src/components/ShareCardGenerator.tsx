@@ -31,7 +31,7 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
   const isAI = result.classification === 'AI_GENERATED';
   const isUnc = result.classification === 'UNCERTAIN';
   const isReal = !isAI && !isUnc;
-  const accent = isAI ? '#ff3b3b' : isUnc ? '#fbbf24' : '#58DDF2';
+  const accent = isAI ? '#ff3b3b' : isUnc ? '#fbbf24' : '#6EE7B7';
 
   useEffect(() => {
     let cancelled = false;
@@ -39,11 +39,11 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d')!;
-      ctx.fillStyle = '#031a2e';
+      ctx.fillStyle = '#03140c';
       ctx.fillRect(0, 0, W, H);
 
       const grad = ctx.createLinearGradient(0, 0, W, H);
-      grad.addColorStop(0, 'rgba(88,221,242,0.10)');
+      grad.addColorStop(0, 'rgba(52, 211, 153,0.10)');
       grad.addColorStop(0.5, 'rgba(0,0,0,0)');
       grad.addColorStop(1, 'rgba(255,59,59,0.12)');
       ctx.fillStyle = grad;
@@ -53,7 +53,7 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
       ctx.fillRect(0, 0, W, 6);
 
       ctx.font = 'bold 40px "Inter", sans-serif';
-      ctx.fillStyle = '#58DDF2';
+      ctx.fillStyle = '#6EE7B7';
       ctx.fillText('UNMASK AI', 40, 58);
       ctx.font = '16px "Inter", sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.45)';
@@ -103,7 +103,7 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
       ctx.beginPath();
       ctx.roundRect(40, 120, badgeW, 64, 12);
       ctx.fill();
-      ctx.fillStyle = '#031a2e';
+      ctx.fillStyle = '#03140c';
       ctx.font = 'bold 30px "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(isAI ? 'AI-GENERATED' : isUnc ? 'UNCERTAIN' : 'REAL IMAGE', 40 + badgeW / 2, 161);
@@ -147,7 +147,7 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
       const ctx = canvas.getContext('2d')!;
       const cx = SEAL / 2;
       ctx.clearRect(0, 0, SEAL, SEAL);
-      ctx.fillStyle = '#031a2e';
+      ctx.fillStyle = '#03140c';
       ctx.fillRect(0, 0, SEAL, SEAL);
 
       const ring = (r: number, color: string, lw: number) => {
@@ -157,9 +157,9 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
         ctx.lineWidth = lw;
         ctx.stroke();
       };
-      ring(285, 'rgba(88,221,242,0.18)', 18);
+      ring(285, 'rgba(52, 211, 153,0.18)', 18);
       ring(250, accent, 6);
-      ring(150, 'rgba(88,221,242,0.35)', 2);
+      ring(150, 'rgba(52, 211, 153,0.35)', 2);
 
       // Check mark
       ctx.strokeStyle = accent;
@@ -278,7 +278,7 @@ export default function ShareCardGenerator({ result, previewUrl, onClose }: Shar
                 The Verified seal is only available for images classified as Real.
               </p>
             )}
-            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#031a2e]">
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#03140c]">
               <canvas ref={sealRef} width={SEAL} height={SEAL} className="mx-auto w-full max-w-[320px]" />
             </div>
             <div className="mt-4 flex gap-3">

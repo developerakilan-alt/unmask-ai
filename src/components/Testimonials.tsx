@@ -49,7 +49,7 @@ export default function Testimonials() {
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TESTIMONIALS.map((t, i) => (
             <AnimatedSection key={t.name} delay={i * 100}>
-              <TiltCard glow className="glass group relative h-full overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(88,221,242,0.1)]">
+              <TiltCard glow className="glass group relative h-full overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:border-neon/30 hover:shadow-[0_0_30px_rgba(52, 211, 153,0.1)]">
                 <div className="absolute inset-0 bg-gradient-to-br from-neon/[0.03] to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                 <div className="relative flex flex-col h-full">
                   <Quote className="h-8 w-8 text-neon/20 mb-3" />

@@ -148,7 +148,7 @@ export default function CommunityGallery({ onJoinWaitlist }: { onJoinWaitlist?: 
         {onJoinWaitlist && (
           <button
             onClick={onJoinWaitlist}
-            className="liquid-btn rounded-xl border border-neon/30 bg-neon/10 px-5 py-2.5 text-sm font-bold text-neon transition-all hover:bg-neon/20 hover:shadow-[0_0_24px_rgba(88,221,242,0.2)]"
+            className="liquid-btn rounded-xl border border-neon/30 bg-neon/10 px-5 py-2.5 text-sm font-bold text-neon transition-all hover:bg-neon/20 hover:shadow-[0_0_24px_rgba(52, 211, 153,0.2)]"
           >
             Submit yours — join the waitlist
           </button>

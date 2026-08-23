@@ -1,43 +1,24 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { type AnalysisResult } from './api';
 import { parseHash, type Route } from './lib/router';
 import { SmoothScroll } from './lib/smooth';
+import { initScrollReveals } from './lib/scrollReveal';
 import { compressImage } from './lib/image';
 import { saveResult } from './lib/history';
 import { enableRipple } from './lib/ripple';
 
-import LiquidBackground from './components/LiquidBackground';
+import FlowWaveBackground from './components/FlowWaveBackground';
 import Navbar from './components/Navbar';
 import UploadZone from './components/UploadZone';
-import Statistics from './components/Statistics';
-import HowItWorks from './components/HowItWorks';
-import DetectionMethods from './components/DetectionMethods';
-import WhyChooseUs from './components/WhyChooseUs';
-import Testimonials from './components/Testimonials';
-import SupportedModels from './components/SupportedModels';
-import APIPreview from './components/APIPreview';
-import ResearchSection from './components/ResearchSection';
-import BeforeAfterDemo from './components/BeforeAfterDemo';
-import WhatCanYouCheck from './components/WhatCanYouCheck';
-import { AnalysisShowcase, ReportPreview } from './components/AnalysisShowcase';
 import AuthModal from './components/AuthModal';
-import Footer from './components/Footer';
 import ImageEditor from './components/ImageEditor';
-import BatchPanel from './components/BatchPanel';
 import ScrollProgress from './components/ScrollProgress';
-import CommandPalette from './components/CommandPalette';
 import NotFoundPage from './components/NotFoundPage';
-import ReportModal from './components/ReportModal';
 import GDPRConsent from './components/GDPRConsent';
 import SplashScreen from './components/SplashScreen';
-import CursorGlow from './components/CursorGlow';
-import SectionDots from './components/SectionDots';
 import BackToTop from './components/BackToTop';
-import FloatingShapes3D from './components/FloatingShapes3D';
 import InstallPrompt from './components/InstallPrompt';
-import CommunityGallery from './components/CommunityGallery';
-import WaitlistModal from './components/WaitlistModal';
 import { PageSkeleton } from './components/Skeleton';
 
 // Route pages are lazy-loaded so the landing page ships first.
@@ -53,7 +34,7 @@ const TermsPage = lazy(() => import('./components/TermsPage'));
 const ComparePanel = lazy(() => import('./components/ComparePanel'));
 const VideoAnalyzer = lazy(() => import('./components/VideoAnalyzer'));
 const SourceChecker = lazy(() => import('./components/SourceChecker'));
-const PricingModal = lazy(() => import('./components/PricingModal'));
+const FeaturesPage = lazy(() => import('./components/FeaturesPage'));
 const WidgetPage = lazy(() => import('./components/WidgetPage'));
 const CalibrationPage = lazy(() => import('./components/CalibrationPage'));
 
@@ -72,16 +53,12 @@ export default function App() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [pricingOpen, setPricingOpen] = useState(false);
-  const [waitlistOpen, setWaitlistOpen] = useState(false);
-  const [waitlistSource, setWaitlistSource] = useState('site');
 
-  const openWaitlist = useCallback((source = 'site') => {
-    setWaitlistSource(source);
-    setWaitlistOpen(true);
-  }, []);
+  // GSAP ScrollTrigger reveals for the home page's top-level sections.
+  useLayoutEffect(() => {
+    if (route || flow !== 'home') return;
+    return initScrollReveals();
+  }, [route, flow]);
 
   useEffect(() => {
     const onHash = () => {
@@ -90,17 +67,6 @@ export default function App() {
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setPaletteOpen((o) => !o);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   useEffect(() => {
@@ -146,19 +112,6 @@ export default function App() {
     setFlow('analyzing');
     window.scrollTo(0, 0);
   }, [file, previewUrl]);
-
-  const startUrlAnalysis = useCallback(
-    (url: string) => {
-      setFile(null);
-      setSourceUrl(url);
-      setResult(null);
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-      setFlow('analyzing');
-      window.scrollTo(0, 0);
-    },
-    [previewUrl],
-  );
 
   const onAnalyzed = (res: AnalysisResult) => {
     setResult(res);
@@ -208,26 +161,19 @@ export default function App() {
     <div className="relative min-h-screen overflow-hidden font-equinox">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-neon focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-black"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-neon focus:focus:px-4 focus:focus:py-2 focus:text-sm focus:font-bold focus:text-black"
       >
         Skip to content
       </a>
-      <LiquidBackground />
-      {!route && <FloatingShapes3D className="pointer-events-none fixed inset-0 z-0" />}
+      <FlowWaveBackground />
       <ScrollProgress />
-      <CursorGlow />
       <BackToTop />
       <InstallPrompt />
-      {!route && <SectionDots />}
       <SplashScreen />
       <SmoothScroll>
           <div className="relative z-10">
             <main id="main">
-            <Navbar
-              onAuthOpen={() => setAuthOpen(true)}
-              onOpenPalette={() => setPaletteOpen(true)}
-              onOpenPricing={() => setPricingOpen(true)}
-            />
+            <Navbar onAuthOpen={() => setAuthOpen(true)} />
 
           {route?.name === 'share' ? (
             <Suspense fallback={<RouteFallback />}>
@@ -273,39 +219,24 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
               <CalibrationPage />
             </Suspense>
+          ) : route?.name === 'features' ? (
+            <Suspense fallback={<RouteFallback />}>
+              <FeaturesPage />
+            </Suspense>
           ) : route?.name === 'notfound' ? (
             <NotFoundPage />
           ) : onStatic ? null : (
             <>
               {flow === 'home' && (
-                <>
-                  <UploadZone
-                    file={file}
-                    previewUrl={previewUrl}
-                    onFiles={handleFiles}
-                    onFile={handleFile}
-                    onAnalyze={startAnalysis}
-                    onRemove={removeFile}
-                    onEdit={() => setEditing(true)}
-                    onUrl={startUrlAnalysis}
-                  />
-                  <section className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-10">
-                    <BatchPanel />
-                  </section>
-                  <Statistics />
-                  <HowItWorks />
-                  <AnalysisShowcase />
-                  <DetectionMethods />
-                  <SupportedModels />
-                  <ReportPreview />
-                  <CommunityGallery onJoinWaitlist={() => openWaitlist('gallery')} />
-                  <BeforeAfterDemo />
-                  <WhatCanYouCheck />
-                  <WhyChooseUs />
-                  <Testimonials />
-                  <APIPreview onJoinWaitlist={() => openWaitlist('api')} />
-                  <ResearchSection />
-                </>
+                <UploadZone
+                  file={file}
+                  previewUrl={previewUrl}
+                  onFiles={handleFiles}
+                  onFile={handleFile}
+                  onAnalyze={startAnalysis}
+                  onRemove={removeFile}
+                  onEdit={() => setEditing(true)}
+                />
               )}
 
               {flow === 'analyzing' && (
@@ -327,17 +258,14 @@ export default function App() {
                     previewUrl={previewUrl}
                     onNew={newImage}
                     onBack={reset}
-                    onReport={() => setReportOpen(true)}
                   />
                 </Suspense>
               )}
             </>
           )}
 
-          <Footer />
           <GDPRConsent />
-          </main>
-        </div>
+          </main>        </div>
       </SmoothScroll>
 
       <AnimatePresence>
@@ -345,20 +273,7 @@ export default function App() {
         {editing && file && (
           <ImageEditor file={file} onCancel={() => setEditing(false)} onApply={applyEdited} />
         )}
-        {reportOpen && (
-          <ReportModal scanId={result?.scanId} onClose={() => setReportOpen(false)} />
-        )}
-        {pricingOpen && (
-          <Suspense fallback={null}>
-            <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />
-          </Suspense>
-        )}
-        {waitlistOpen && (
-          <WaitlistModal source={waitlistSource} onClose={() => setWaitlistOpen(false)} />
-        )}
       </AnimatePresence>
-
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

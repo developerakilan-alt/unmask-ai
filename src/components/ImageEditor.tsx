@@ -222,7 +222,7 @@ export default function ImageEditor({ file, onCancel, onApply }: ImageEditorProp
           <button
             onClick={apply}
             disabled={busy}
-            className="liquid-btn flex items-center gap-2 rounded-xl bg-neon px-4 py-2 text-sm font-bold text-black hover:shadow-[0_0_24px_rgba(88,221,242,0.4)]"
+            className="liquid-btn flex items-center gap-2 rounded-xl bg-neon px-4 py-2 text-sm font-bold text-black hover:shadow-[0_0_24px_rgba(52, 211, 153,0.4)]"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
             Apply

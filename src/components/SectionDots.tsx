@@ -67,7 +67,7 @@ export default function SectionDots() {
                 )}
                 <span
                   className={`relative h-2 w-2 rounded-full transition-all duration-300 ${
-                    isActive ? 'bg-neon shadow-[0_0_10px_rgba(88,221,242,0.9)]' : 'bg-white/30 group-hover:bg-white/60'
+                    isActive ? 'bg-neon shadow-[0_0_10px_rgba(52, 211, 153,0.9)]' : 'bg-white/30 group-hover:bg-white/60'
                   }`}
                 />
                 <span className="pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-lg border border-white/10 bg-ink/80 px-2 py-1 text-[10px] font-medium text-white/70 opacity-0 backdrop-blur transition-opacity duration-200 group-hover:opacity-100">

@@ -31,3 +31,6 @@ backend/tests/reports/
 *.tsbuildinfo
 
 Untitled-1.jsonc
+
+# Electron packaging output
+release*/

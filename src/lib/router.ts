@@ -2,6 +2,7 @@
 
 export type RouteName =
   | 'home'
+  | 'features'
   | 'analyzing'
   | 'result'
   | 'share'
@@ -28,7 +29,8 @@ export function parseHash(): Route | null {
   if (!raw) return null;
   const [seg, param] = raw.split('/');
   if (seg === 'share' && param) return { name: 'share', shareId: param };
-  const known: RouteName[] = ['dashboard', 'docs', 'playground', 'status', 'privacy', 'terms', 'compare', 'video', 'source', 'widget', 'calibration'];
+  if (seg === 'home') return null;
+  const known: RouteName[] = ['features', 'dashboard', 'docs', 'playground', 'status', 'privacy', 'terms', 'compare', 'video', 'source', 'widget', 'calibration'];
   if (known.includes(seg as RouteName)) return { name: seg as RouteName };
   return { name: 'notfound' };
 }

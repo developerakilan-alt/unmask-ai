@@ -16,7 +16,7 @@ function passwordStrength(pw: string): { score: number; label: string; color: st
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   const clamped = Math.min(4, score);
   const labels = ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong'];
-  const colors = ['#ff3b3b', '#ff6b4a', '#ffb347', '#7ee07e', '#58ddf2'];
+  const colors = ['#ff3b3b', '#ff6b4a', '#ffb347', '#7ee07e', '#6EE7B7'];
   return { score: clamped, label: labels[clamped], color: colors[clamped] };
 }
 
@@ -258,7 +258,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={loading || !configured}
-            className="liquid-btn flex w-full items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_28px_rgba(88,221,242,0.4)] disabled:opacity-60"
+            className="liquid-btn flex w-full items-center justify-center gap-2 rounded-xl bg-neon py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_28px_rgba(52, 211, 153,0.4)] disabled:opacity-60"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

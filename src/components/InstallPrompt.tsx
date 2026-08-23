@@ -46,7 +46,7 @@ export default function InstallPrompt() {
 
   return (
     <div className="fixed bottom-4 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
-      <div className="flex items-center gap-3 rounded-2xl border border-neon/25 bg-[#0b0f1a]/95 px-4 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+      <div className="flex items-center gap-3 rounded-2xl border border-neon/25 bg-[#071009]/95 px-4 py-3 shadow-[0_8px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-neon/15 text-neon">
           <Download className="h-4.5 w-4.5" />
         </span>
@@ -58,7 +58,7 @@ export default function InstallPrompt() {
         </div>
         <button
           onClick={install}
-          className="rounded-lg bg-neon px-3 py-1.5 text-xs font-bold text-black transition-all hover:shadow-[0_0_16px_rgba(88,221,242,0.4)]"
+          className="rounded-lg bg-neon px-3 py-1.5 text-xs font-bold text-black transition-all hover:shadow-[0_0_16px_rgba(52, 211, 153,0.4)]"
         >
           Install
         </button>

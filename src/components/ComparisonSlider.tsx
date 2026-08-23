@@ -49,7 +49,7 @@ export function ComparisonSlider({
           {beforeLabel}
         </span>
       </div>
-      <div className="absolute inset-y-0 z-10 w-0.5 bg-neon" style={{ left: `${pos}%`, boxShadow: '0 0 12px rgba(88,221,242,0.7)' }} />
+      <div className="absolute inset-y-0 z-10 w-0.5 bg-neon" style={{ left: `${pos}%`, boxShadow: '0 0 12px rgba(52, 211, 153,0.7)' }} />
       <div
         className="overlay-label-strong absolute top-1/2 z-20 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-neon/50 bg-black/70 backdrop-blur"
         style={{ left: `${pos}%` }}

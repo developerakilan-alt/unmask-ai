@@ -48,7 +48,7 @@ export default function SplashScreen() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a5f86] via-[#087fa5] to-[#03172e]"
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-gradient-to-b from-[#065f46] via-[#047857] to-[#010b06]"
         >
           <div className="pointer-events-none absolute inset-0 glow-overlay" />
 
@@ -64,7 +64,7 @@ export default function SplashScreen() {
             <img
               src={`${import.meta.env.BASE_URL}logo.png`}
               alt="Unmask AI"
-              className="relative h-24 w-24 rounded-3xl object-contain ring-1 ring-inset ring-white/40 shadow-[0_0_60px_rgba(88,221,242,0.45)]"
+              className="relative h-24 w-24 rounded-3xl object-contain ring-1 ring-inset ring-white/40 shadow-[0_0_60px_rgba(52, 211, 153,0.45)]"
             />
           </motion.div>
 

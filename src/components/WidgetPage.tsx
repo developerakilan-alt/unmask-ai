@@ -66,12 +66,12 @@ export default function WidgetPage() {
   const color = isAI ? 'text-danger' : isUnc ? 'text-amber-400' : 'text-neon';
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#03172e] p-6 font-[Manrope,system-ui,sans-serif]">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#010b06] p-6 font-[Manrope,system-ui,sans-serif]">
       <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-bold text-white">
-              UNMASK <span className="text-[#58DDF2]">AI</span>
+              UNMASK <span className="text-[#6EE7B7]">AI</span>
             </p>
             <p className="text-[10px] text-white/40">on-device AI image analysis</p>
           </div>
@@ -86,7 +86,7 @@ export default function WidgetPage() {
           <>
             <button
               onClick={() => inputRef.current?.click()}
-              className="mt-4 flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed border-white/25 py-8 text-white/50 transition hover:border-[#58DDF2]/60 hover:text-white"
+              className="mt-4 flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed border-white/25 py-8 text-white/50 transition hover:border-[#6EE7B7]/60 hover:text-white"
             >
               <Upload className="h-6 w-6" />
               <span className="text-sm">Upload an image</span>
@@ -98,7 +98,7 @@ export default function WidgetPage() {
 
         {busy && (
           <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl bg-white/[0.03] py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-[#58DDF2]" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#6EE7B7]" />
             <p className="text-xs text-white/50">Analyzing…</p>
           </div>
         )}
@@ -136,7 +136,7 @@ export default function WidgetPage() {
                 setResult(null);
                 setError(null);
               }}
-              className="mt-3 w-full rounded-xl bg-[#58DDF2] py-2.5 text-sm font-bold text-black"
+              className="mt-3 w-full rounded-xl bg-[#6EE7B7] py-2.5 text-sm font-bold text-black"
             >
               Analyze another
             </button>
