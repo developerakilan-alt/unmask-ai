@@ -15,6 +15,7 @@ import AuthModal from './components/AuthModal';
 import ImageEditor from './components/ImageEditor';
 import ScrollProgress from './components/ScrollProgress';
 import NotFoundPage from './components/NotFoundPage';
+import Footer from './components/Footer';
 import GDPRConsent from './components/GDPRConsent';
 import SplashScreen from './components/SplashScreen';
 import BackToTop from './components/BackToTop';
@@ -227,6 +228,8 @@ export default function App() {
             <Suspense fallback={<RouteFallback />}>
               <FeaturesPage />
             </Suspense>
+          ) : route?.name === 'error' ? (
+            <NotFoundPage variant="network" />
           ) : route?.name === 'notfound' ? (
             <NotFoundPage />
           ) : onStatic ? null : (
@@ -248,6 +251,7 @@ export default function App() {
                   <Suspense fallback={null}>
                     <AboutSection />
                   </Suspense>
+                  <Footer />
                 </>
               )}
 

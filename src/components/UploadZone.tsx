@@ -58,7 +58,7 @@ export default function UploadZone({ file, previewUrl, onFiles, onFile, onAnalyz
     <>
       {/* Hero Section — detector panel pinned to the far right, copy bottom-left */}
       <div id="home">
-        <section ref={sectionRef} id="detector" className="relative px-4 pb-14 pr-0 pt-10 sm:sm:pt-14">
+        <section ref={sectionRef} id="detector" className="relative flex min-h-[calc(100vh-6rem)] flex-col justify-center px-4 pb-48 pr-0 pt-6 sm:pb-60 sm:pt-10">
           <HeroParticles />
 
           {/* Bottom-left hero copy */}
@@ -66,11 +66,11 @@ export default function UploadZone({ file, previewUrl, onFiles, onFile, onAnalyz
             initial="hidden"
             animate="show"
             variants={{ hidden: {}, show: { transition: { staggerChildren: 0.14, delayChildren: 0.2 } } }}
-            className="relative z-20 mb-10 ml-1 max-w-md sm:ml-3 lg:absolute lg:bottom-14 lg:left-14 lg:mb-0 lg:ml-0 lg:max-w-sm"
+            className="relative z-20 mb-10 ml-1 max-w-md sm:ml-3 lg:absolute lg:bottom-44 lg:left-14 lg:mb-0 lg:ml-0 lg:max-w-sm"
           >
             <motion.h1
               variants={{ hidden: { opacity: 0, y: 26 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } } }}
-              className="text-balance text-4xl font-extrabold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-[3.6rem]"
+              className="text-balance text-3xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-4xl lg:text-[2.6rem]"
             >
               Is this image{' '}
               <span className="neon-text">real</span> or{' '}
@@ -80,7 +80,7 @@ export default function UploadZone({ file, previewUrl, onFiles, onFile, onAnalyz
             </motion.h1>
             <motion.p
               variants={{ hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } } }}
-              className="mt-4 max-w-sm text-balance text-base leading-relaxed text-white/60"
+              className="mt-4 max-w-sm text-balance text-sm leading-relaxed text-white/60"
             >
               Upload any image and let our forensic engine analyze metadata, texture patterns and AI signatures to reveal its true origin.
             </motion.p>

@@ -27,24 +27,16 @@ const NAV_LINKS: NavLink[] = [
   { key: 'blog', labelKey: 'nav.blog', href: REPO_URL, kind: 'external' },
 ];
 
-/** Compact glowing hexagonal AI shield mark. */
+/** Brand mark — same logo asset as the footer. */
 function HexLogo() {
   return (
     <span className="relative grid h-10 w-10 shrink-0 place-items-center">
       <span className="hex-logo-halo absolute inset-0" aria-hidden="true" />
-      <svg viewBox="0 0 40 40" className="relative h-10 w-10 drop-shadow-[0_0_12px_rgba(52,211,153,0.55)]" aria-hidden="true">
-        <defs>
-          <linearGradient id="hex-face" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#6ee7b7" />
-            <stop offset="45%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#052e21" />
-          </linearGradient>
-        </defs>
-        <path d="M20 2.5 35 11v18L20 37.5 5 29V11Z" fill="url(#hex-face)" stroke="rgba(209,250,229,0.7)" strokeWidth="1" />
-        <path d="M20 7.5 30.5 13.5v13L20 32.5 9.5 26.5v-13Z" fill="none" stroke="rgba(236,253,245,0.45)" strokeWidth="0.8" />
-        <path d="M20 12l6.5 3v5.2c0 3.6-2.7 6.2-6.5 7.8-3.8-1.6-6.5-4.2-6.5-7.8V15Z" fill="rgba(2,44,34,0.88)" stroke="#d1fae5" strokeWidth="1" />
-        <circle cx="20" cy="19.6" r="2.4" fill="#a7f3d0" />
-      </svg>
+      <img
+        src={`${import.meta.env.BASE_URL}logo.png`}
+        alt="Unmask AI logo"
+        className="relative h-10 w-10 rounded-2xl object-contain ring-1 ring-inset ring-white/30 drop-shadow-[0_0_12px_rgba(52,211,153,0.55)]"
+      />
     </span>
   );
 }

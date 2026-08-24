@@ -60,10 +60,8 @@ export function createFlowScene(
 ): FlowScene {
   const staticMode = !!opts?.staticMode;
 
-  const renderer = new THREE.WebGL1Renderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.VSMShadowMap;
+  const renderer = new THREE.WebGL1Renderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
@@ -81,7 +79,7 @@ export function createFlowScene(
   const group = new THREE.Group();
   scene.add(group);
 
-  const geo = new THREE.SphereGeometry(4.2, 200, 600);
+  const geo = new THREE.SphereGeometry(4.2, 128, 256);
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
     uStream: { value: 0 },
@@ -251,7 +249,7 @@ export function createFlowScene(
   function resize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;

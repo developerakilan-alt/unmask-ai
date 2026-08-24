@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FileImage, Grid3x3, Activity, Layers, Eye, Sparkles, Fingerprint, CheckCircle2, Loader2, Link2 } from 'lucide-react';
 import type { AnalysisResult } from '../api';
 import { analyzeImageWithFallback, analyzeUrl } from '../api';
+import { navigate } from '../lib/router';
 import HeatmapOverlay from './HeatmapOverlay';
 
 const SCAN_STEPS = [
@@ -18,6 +19,15 @@ function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+function failToErrorPage(message: string) {
+  try {
+    sessionStorage.setItem('unmask:error-message', message);
+  } catch {
+    /* ignore */
+  }
+  navigate('error');
+}
+
 interface AnalyzingPageProps {
   previewUrl: string | null;
   file: File | null;
@@ -28,7 +38,6 @@ interface AnalyzingPageProps {
 
 export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onCancel }: AnalyzingPageProps) {
   const [step, setStep] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -37,7 +46,7 @@ export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onC
     const run = async () => {
       try {
         if (!file && !sourceUrl) {
-          setError('No image to analyze');
+          failToErrorPage('No image to analyze');
           return;
         }
 
@@ -55,7 +64,7 @@ export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onC
         for (let i = 0; i < totalSteps; i++) {
           if (cancelled) return;
           if (apiError) {
-            setError(apiError instanceof Error ? apiError.message : 'Analysis failed. Is the backend running?');
+            failToErrorPage(apiError instanceof Error ? apiError.message : 'Analysis failed. Is the backend running?');
             return;
           }
           setStep(i);
@@ -91,7 +100,7 @@ export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onC
         onDone(res);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Analysis failed. Is the backend running?');
+          failToErrorPage(err instanceof Error ? err.message : 'Analysis failed. Is the backend running?');
         }
       }
     };
@@ -172,20 +181,6 @@ export default function AnalyzingPage({ previewUrl, file, sourceUrl, onDone, onC
               );
             })}
           </div>
-
-          {error && (
-            <div className="mt-4 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-center">
-              <p className="text-sm font-semibold text-danger">
-                {error.includes('Detection unavailable') ? 'Detection unavailable' : error}
-              </p>
-              <p className="mt-1 text-xs text-white/40">
-                {error.includes('Detection unavailable')
-                  ? 'The detection engine could not produce a prediction for this image. No verdict was guessed.'
-                  : 'Make sure the backend is running on port 8000'}
-              </p>
-              <button onClick={onCancel} className="mt-2 text-xs font-semibold text-white/60 hover:text-white">Go Back</button>
-            </div>
-          )}
 
           <button
             onClick={onCancel}
