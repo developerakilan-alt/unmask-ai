@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { useAuth } from '../lib/auth';
 import { LogOut, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '../lib/i18n';
 import { LiquidNavButton } from './LiquidNavButton';
-import Magnetic from './Magnetic';
-import NavOrb from './NavOrb';
 
 interface NavbarProps {
   onAuthOpen: () => void;
@@ -23,7 +21,6 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('');
-  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   useEffect(() => {
     const ids = NAV_LINKS.map((l) => l.href.replace('#', ''));
@@ -48,70 +45,75 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
     };
   }, [mobileOpen]);
 
-  const isActive = (href: string) => activeSection === href.replace('#', '');
-  // The glowing capsule sits behind the hovered item, or the active one when
-  // nothing is hovered — it springs between items via the shared layoutId.
-  const isCapsuleTarget = (href: string) =>
-    hoveredHref ? hoveredHref === href : isActive(href);
+  const boxTilt = (e: ReactMouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / Math.max(r.width, 1);
+    const y = (e.clientY - r.top) / Math.max(r.height, 1);
+    el.style.setProperty('--mx', `${(x * 100).toFixed(2)}%`);
+    el.style.setProperty('--my', `${(y * 100).toFixed(2)}%`);
+    el.style.setProperty('--rx', `${((0.5 - y) * 6).toFixed(2)}deg`);
+    el.style.setProperty('--ry', `${((x - 0.5) * 6).toFixed(2)}deg`);
+  };
+
+  const boxTiltReset = (e: ReactMouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    el.style.setProperty('--rx', '0deg');
+    el.style.setProperty('--ry', '0deg');
+  };
 
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'pt-2' : 'pt-3.5'}`}>
-      <div className="relative mx-auto w-full max-w-6xl px-3 sm:px-4">
-        {/* Soft green light travelling underneath the pill */}
-        <span className="nav-underglow" aria-hidden="true" />
+    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'pt-2' : 'pt-4'}`}>
+      {/* Brand — pinned to the top-left corner of the site, outside the nav bar */}
+      <a
+        href="#home"
+        onClick={() => setMobileOpen(false)}
+        className="fixed left-3 top-2 z-[70] flex items-center gap-2.5"
+        aria-label="Unmask AI home"
+      >
+        <img
+          src={`${import.meta.env.BASE_URL}logo.png`}
+          alt="Unmask AI"
+          className="h-9 w-9 rounded-xl object-contain ring-1 ring-inset ring-white/30"
+        />
+        <span className="hidden leading-tight sm:block">
+          <span className="block text-sm font-bold tracking-wide text-white">
+            UNMASK <span className="neon-text">AI</span>
+          </span>
+          <span className="block text-[8px] font-semibold uppercase tracking-[0.4em] text-white/50">
+            {t('nav.brandTag')}
+          </span>
+        </span>
+      </a>
 
-        {/* Floating glass pill */}
-        <motion.nav
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="nav-pill relative flex items-center justify-between gap-2 py-2 pl-3 pr-2 sm:pl-4"
-        >
-          {/* Brand — tiny 3D orb + name */}
-          <a href="#home" className="group flex shrink-0 items-center gap-2.5" aria-label="Unmask AI home">
-            <NavOrb size={30} />
-            <span className="leading-tight">
-              <span className="block text-sm font-bold tracking-wide text-white">
-                UNMASK <span className="neon-text">AI</span>
-              </span>
-              <span className="hidden text-[8px] font-semibold uppercase tracking-[0.4em] text-white/50 sm:block">
-                {t('nav.brandTag')}
-              </span>
-            </span>
-          </a>
-
-          {/* Section links with liquid glowing capsule */}
-          <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto py-0.5">
+      {/* Full-bleed glass navigation bar — spans the entire width of the site */}
+      <motion.nav
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        onMouseMove={boxTilt}
+        onMouseLeave={boxTiltReset}
+        className="glass nav-3d flex w-full items-center rounded-none py-2.5 pl-4 pr-3 sm:pl-6 sm:pr-4"
+      >
+        <div className="nav-float flex w-full items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto pl-[52px] sm:pl-[168px]">
             {NAV_LINKS.map((link) => (
-              <Magnetic key={link.labelKey} strength={0.15}>
-                <a
-                  href={link.href}
-                  onMouseEnter={() => setHoveredHref(link.href)}
-                  onMouseLeave={() => setHoveredHref(null)}
-                  onFocus={() => setHoveredHref(link.href)}
-                  onBlur={() => setHoveredHref(null)}
-                  className={`relative whitespace-nowrap rounded-full px-3.5 py-2 text-sm transition-colors ${
-                    isActive(link.href)
-                      ? 'font-semibold text-white'
-                      : 'text-white/65 hover:text-white'
-                  }`}
-                >
-                  {isCapsuleTarget(link.href) && (
-                    <motion.span
-                      layoutId="nav-glow-capsule"
-                      className="nav-active-capsule"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span className="relative z-10">{t(link.labelKey)}</span>
-                </a>
-              </Magnetic>
+              <a
+                key={link.labelKey}
+                href={link.href}
+                className={`whitespace-nowrap rounded-full px-3.5 py-2 text-sm transition-colors ${
+                  activeSection === link.href.replace('#', '')
+                    ? 'bg-white/15 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]'
+                    : 'text-white/65 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {t(link.labelKey)}
+              </a>
             ))}
           </div>
 
-          {/* Auth actions */}
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="nav-pop flex shrink-0 items-center gap-1.5">
             {user ? (
               <>
                 <div className="hidden items-center gap-2 xl:flex" title={user.email}>
@@ -121,34 +123,28 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
                   </span>
                   <span className="max-w-[140px] truncate text-xs text-white/60">{user.email}</span>
                 </div>
-                <Magnetic strength={0.2} className="hidden sm:inline-block">
-                  <LiquidNavButton
-                    onClick={signOut}
-                    className="glass-btn flex h-9 items-center gap-1.5 px-4 text-xs font-semibold"
-                  >
-                    <LogOut className="h-3.5 w-3.5" />
-                    <span className="hidden md:inline">{t('nav.signout')}</span>
-                  </LiquidNavButton>
-                </Magnetic>
+                <LiquidNavButton
+                  onClick={signOut}
+                  className="glass-btn flex h-9 items-center gap-1.5 px-4 text-xs font-semibold"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t('nav.signout')}</span>
+                </LiquidNavButton>
               </>
             ) : (
               <>
-                <Magnetic strength={0.2} className="hidden sm:inline-block">
-                  <LiquidNavButton
-                    onClick={onAuthOpen}
-                    className="px-3 py-2 text-sm text-white/70 transition-colors hover:text-white"
-                  >
-                    {t('nav.login')}
-                  </LiquidNavButton>
-                </Magnetic>
-                <Magnetic strength={0.2} className="inline-block">
-                  <LiquidNavButton
-                    onClick={onAuthOpen}
-                    className="glass-btn-primary flex h-9 items-center px-4 text-xs font-bold"
-                  >
-                    {t('nav.signup')}
-                  </LiquidNavButton>
-                </Magnetic>
+                <LiquidNavButton
+                  onClick={onAuthOpen}
+                  className="hidden px-3 py-2 text-sm text-white/70 transition-colors hover:text-white sm:block"
+                >
+                  {t('nav.login')}
+                </LiquidNavButton>
+                <LiquidNavButton
+                  onClick={onAuthOpen}
+                  className="glass-btn-primary flex h-9 items-center px-4 text-xs font-bold"
+                >
+                  {t('nav.signup')}
+                </LiquidNavButton>
               </>
             )}
 
@@ -160,8 +156,8 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
               {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </LiquidNavButton>
           </div>
-        </motion.nav>
-      </div>
+        </div>
+      </motion.nav>
 
       {/* Mobile drawer */}
       <AnimatePresence>
@@ -199,7 +195,7 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className={`rounded-xl px-3 py-3 text-sm transition-colors hover:bg-white/10 ${
-                    isActive(link.href) ? 'font-semibold text-white' : 'text-white/70 hover:text-white'
+                    activeSection === link.href.replace('#', '') ? 'font-semibold text-white' : 'text-white/70 hover:text-white'
                   }`}
                 >
                   {t(link.labelKey)}

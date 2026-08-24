@@ -465,82 +465,6 @@
       transform: none;
     }
   }
-
-  /* ── Floating liquid-glass pill navbar ─────────────────────────────── */
-  .nav-pill {
-    background: linear-gradient(180deg, rgba(7, 32, 23, 0.6), rgba(2, 15, 10, 0.68));
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(209, 250, 229, 0.2);
-    border-radius: 9999px;
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
-      inset 0 -14px 28px -20px rgba(110, 231, 183, 0.3),
-      0 16px 44px -14px rgba(1, 12, 8, 0.6);
-  }
-
-  /* Glowing capsule behind the active / hovered nav item */
-  .nav-active-capsule {
-    position: absolute;
-    inset: 1px;
-    border-radius: 9999px;
-    background: linear-gradient(180deg, rgba(209, 250, 229, 0.22), rgba(110, 231, 183, 0.1));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.35),
-      0 0 18px rgba(110, 231, 183, 0.35),
-      0 0 4px rgba(110, 231, 183, 0.25);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
-
-  /* Soft green light slowly travelling underneath the pill */
-  .nav-underglow {
-    pointer-events: none;
-    position: absolute;
-    left: 8%;
-    right: 8%;
-    top: 100%;
-    height: 26px;
-    margin-top: -8px;
-    overflow: hidden;
-    filter: blur(12px);
-    opacity: 0.5;
-  }
-  .nav-underglow::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -45%;
-    width: 45%;
-    background: radial-gradient(60% 110% at 50% 0%, rgba(110, 231, 183, 0.5), transparent 70%);
-    animation: nav-underglow-travel 11s ease-in-out infinite alternate;
-  }
-  @keyframes nav-underglow-travel {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(300%);
-    }
-  }
-
-  /* CSS fallback orb when WebGL is unavailable */
-  .nav-orb-fallback {
-    display: inline-block;
-    flex-shrink: 0;
-    border-radius: 9999px;
-    background:
-      radial-gradient(circle at 32% 28%, #d1fae5 0%, #34d399 38%, #059669 72%, #065f46 100%);
-    box-shadow:
-      inset -2px -3px 6px rgba(2, 44, 34, 0.55),
-      0 0 12px rgba(110, 231, 183, 0.5);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .nav-underglow::before {
-      animation: none;
-    }
-  }
   .nexus-bg[data-fallback='true']::before {
     content: '';
     position: absolute;
@@ -712,19 +636,6 @@
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(6, 39, 28, 0.12);
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-}
-.light .nav-pill {
-  background: linear-gradient(180deg, rgba(240, 253, 248, 0.72), rgba(222, 247, 237, 0.78));
-  border-color: rgba(6, 39, 28, 0.16);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 16px 44px -18px rgba(6, 39, 28, 0.35);
-}
-.light .nav-active-capsule {
-  background: linear-gradient(180deg, rgba(110, 231, 183, 0.3), rgba(110, 231, 183, 0.14));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 0 18px rgba(16, 185, 129, 0.3);
 }
 
 .light .text-white {
