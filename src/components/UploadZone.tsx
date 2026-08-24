@@ -70,7 +70,7 @@ export default function UploadZone({ file, previewUrl, onFiles, onFile, onAnalyz
           >
             <motion.h1
               variants={{ hidden: { opacity: 0, y: 26 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } } }}
-              className="text-balance text-3xl font-bold leading-[1.08] tracking-tight text-white sm:text-4xl"
+              className="text-balance text-4xl font-extrabold leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-[3.6rem]"
             >
               Is this image{' '}
               <span className="neon-text">real</span> or{' '}

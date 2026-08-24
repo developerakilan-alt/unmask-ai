@@ -37,7 +37,7 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section id="features" className="relative z-10 px-4 pb-20">
+    <section id="how-it-works" className="relative z-10 px-4 pb-20">
       <div className="mx-auto max-w-5xl">
         <AnimatedSection>
           <h2 className="text-center text-3xl font-bold tracking-tight text-white sm:text-4xl">

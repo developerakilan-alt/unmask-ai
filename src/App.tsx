@@ -37,6 +37,9 @@ const SourceChecker = lazy(() => import('./components/SourceChecker'));
 const FeaturesPage = lazy(() => import('./components/FeaturesPage'));
 const WidgetPage = lazy(() => import('./components/WidgetPage'));
 const CalibrationPage = lazy(() => import('./components/CalibrationPage'));
+const HowItWorksSection = lazy(() => import('./components/HowItWorks'));
+const AboutSection = lazy(() => import('./components/ResearchSection'));
+import PricingModal from './components/PricingModal';
 
 type Flow = 'home' | 'analyzing' | 'result';
 
@@ -52,6 +55,7 @@ export default function App() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
   const [editing, setEditing] = useState(false);
 
   // GSAP ScrollTrigger reveals for the home page's top-level sections.
@@ -173,7 +177,7 @@ export default function App() {
       <SmoothScroll>
           <div className="relative z-10">
             <main id="main">
-            <Navbar onAuthOpen={() => setAuthOpen(true)} />
+            <Navbar onAuthOpen={() => setAuthOpen(true)} onPricingOpen={() => setPricingOpen(true)} />
 
           {route?.name === 'share' ? (
             <Suspense fallback={<RouteFallback />}>
@@ -228,15 +232,23 @@ export default function App() {
           ) : onStatic ? null : (
             <>
               {flow === 'home' && (
-                <UploadZone
-                  file={file}
-                  previewUrl={previewUrl}
-                  onFiles={handleFiles}
-                  onFile={handleFile}
-                  onAnalyze={startAnalysis}
-                  onRemove={removeFile}
-                  onEdit={() => setEditing(true)}
-                />
+                <>
+                  <UploadZone
+                    file={file}
+                    previewUrl={previewUrl}
+                    onFiles={handleFiles}
+                    onFile={handleFile}
+                    onAnalyze={startAnalysis}
+                    onRemove={removeFile}
+                    onEdit={() => setEditing(true)}
+                  />
+                  <Suspense fallback={null}>
+                    <HowItWorksSection />
+                  </Suspense>
+                  <Suspense fallback={null}>
+                    <AboutSection />
+                  </Suspense>
+                </>
               )}
 
               {flow === 'analyzing' && (
@@ -270,6 +282,7 @@ export default function App() {
 
       <AnimatePresence>
         {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+        {pricingOpen && <PricingModal open={pricingOpen} onClose={() => setPricingOpen(false)} />}
         {editing && file && (
           <ImageEditor file={file} onCancel={() => setEditing(false)} onApply={applyEdited} />
         )}

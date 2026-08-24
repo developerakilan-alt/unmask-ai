@@ -74,15 +74,15 @@
 }
 
 @layer components {
-  /* Glossy glass panel — deep blue translucent, thick top highlight */
+  /* Glossy glass panel — deep black-to-green translucent, thick top highlight */
   .glass {
-    background: rgba(6, 46, 32, 0.42);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    border: 1px solid rgba(209, 250, 229, 0.35);
+    background: linear-gradient(165deg, rgba(8, 32, 22, 0.55) 0%, rgba(2, 10, 7, 0.62) 100%);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(52, 211, 153, 0.28);
     box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.55),
-      inset 0 -20px 40px -28px rgba(110, 231, 183, 0.25),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
+      inset 0 -20px 40px -28px rgba(110, 231, 183, 0.28),
       inset 0 0 40px rgba(110, 231, 183, 0.06),
       0 12px 40px rgba(1, 12, 8, 0.45);
   }
@@ -170,23 +170,23 @@
     transform: none;
   }
 
-  /* Glossy capsule CTA — bright mint */
+  /* Glossy capsule CTA — bright premium emerald gradient + glow */
   .glass-btn-primary {
-    border-color: rgba(255, 255, 255, 0.7);
-    background: linear-gradient(180deg, rgba(209, 250, 229, 0.95), rgba(110, 231, 183, 0.75));
+    border-color: rgba(209, 250, 229, 0.55);
+    background: linear-gradient(135deg, #a7f3d0 0%, #34d399 48%, #0d9f6e 100%);
     color: #01291c;
     box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.75),
       inset 0 -10px 18px -12px rgba(2, 44, 34, 0.5),
-      0 8px 24px rgba(1, 12, 8, 0.4),
-      0 0 30px rgba(110, 231, 183, 0.4);
+      0 6px 20px -4px rgba(16, 185, 129, 0.45),
+      0 0 26px rgba(52, 211, 153, 0.35);
   }
   .glass-btn-primary:hover {
     box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 1),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
       inset 0 -10px 18px -12px rgba(2, 44, 34, 0.5),
-      0 10px 30px rgba(1, 12, 8, 0.5),
-      0 0 44px rgba(110, 231, 183, 0.6);
+      0 8px 26px -4px rgba(16, 185, 129, 0.6),
+      0 0 40px rgba(52, 211, 153, 0.55);
   }
 
   /* Liquid glass 3D nav items: tilt + sheen + border glow follow the cursor */
@@ -431,39 +431,142 @@
     opacity: 0;
   }
 
-  /* Navbar 3D tilt + floating motion */
-  .nav-3d {
-    transform-style: preserve-3d;
-    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-    transition: transform 0.18s ease-out;
-    will-change: transform;
+  /* ── Floating liquid-glass pill navbar ─────────────────────────────── */
+  .nav-shell {
+    position: relative;
+    background: linear-gradient(180deg, rgba(10, 26, 20, 0.72) 0%, rgba(2, 12, 8, 0.78) 100%);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid rgba(52, 211, 153, 0.28);
+    border-radius: 9999px;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+      inset 0 -18px 34px -24px rgba(110, 231, 183, 0.35),
+      0 18px 50px -16px rgba(0, 0, 0, 0.65),
+      0 6px 30px -6px rgba(16, 185, 129, 0.22);
   }
-  .nav-float {
-    animation: nav-float 7s ease-in-out infinite;
-    transform-style: preserve-3d;
+  /* Soft emerald ambient glow hugging the outer bottom edge + corners */
+  .nav-shell::after {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: -1.5px;
+    border-radius: inherit;
+    background:
+      radial-gradient(55% 130% at 12% 115%, rgba(110, 231, 183, 0.28), transparent 60%),
+      radial-gradient(55% 130% at 88% 115%, rgba(110, 231, 183, 0.22), transparent 60%),
+      radial-gradient(40% 90% at 50% 120%, rgba(52, 211, 153, 0.18), transparent 70%);
+    filter: blur(6px);
+    z-index: -1;
   }
-  @keyframes nav-float {
+
+  /* Glowing line under the active / hovered nav item */
+  .nav-active-line {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 3px;
+    height: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(52, 211, 153, 0.85) 15%,
+      #6ee7b7 50%,
+      rgba(52, 211, 153, 0.85) 85%,
+      transparent
+    );
+    box-shadow:
+      0 0 10px rgba(52, 211, 153, 0.9),
+      0 0 24px rgba(52, 211, 153, 0.45);
+  }
+
+  /* Subtle emerald halo behind the active item */
+  .nav-item-glow {
+    border-radius: 9999px;
+    background: radial-gradient(85% 120% at 50% 10%, rgba(52, 211, 153, 0.18), transparent 72%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* Pulsing emerald halo behind the hex logo */
+  .hex-logo-halo {
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(52, 211, 153, 0.35), transparent 70%);
+    filter: blur(7px);
+    animation: hex-halo 4s ease-in-out infinite;
+  }
+  @keyframes hex-halo {
     0%,
     100% {
-      transform: translateY(0);
+      opacity: 0.55;
+      transform: scale(0.9);
     }
     50% {
-      transform: translateY(-3px);
+      opacity: 1;
+      transform: scale(1.12);
     }
-  }
-  .nav-pop {
-    transform: translateZ(26px);
   }
   @media (prefers-reduced-motion: reduce) {
-    .nav-float {
+    .hex-logo-halo {
       animation: none;
     }
-    .nav-3d {
-      transform: none;
-    }
-    .nav-pop {
-      transform: none;
-    }
+  }
+
+  /* Ghost CTA — transparent glass with a thin green border */
+  .btn-ghost-green {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(52, 211, 153, 0.45);
+    background: rgba(110, 231, 183, 0.06);
+    color: #d1fae5;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn-ghost-green:hover {
+    border-color: rgba(110, 231, 183, 0.8);
+    background: rgba(110, 231, 183, 0.14);
+    box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+    color: #fff;
+  }
+  .btn-ghost-green:active {
+    transform: translateY(1px);
+  }
+
+  /* Primary CTA — bright premium emerald gradient + soft glow */
+  .btn-primary-gradient {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(209, 250, 229, 0.55);
+    background: linear-gradient(135deg, #a7f3d0 0%, #34d399 48%, #0d9f6e 100%);
+    color: #01291c;
+    text-shadow: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.75),
+      0 6px 20px -4px rgba(16, 185, 129, 0.5),
+      0 0 26px rgba(52, 211, 153, 0.35);
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .btn-primary-gradient:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 8px 26px -4px rgba(16, 185, 129, 0.65),
+      0 0 40px rgba(52, 211, 153, 0.55);
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+  }
+  .btn-primary-gradient:active {
+    transform: translateY(1px);
+  }
+
+  /* Anchored sections stop below the floating pill when scrolled to */
+  section[id],
+  div#home {
+    scroll-margin-top: 96px;
   }
   .nexus-bg[data-fallback='true']::before {
     content: '';
@@ -636,6 +739,42 @@
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(6, 39, 28, 0.12);
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+.light .nav-shell {
+  background: linear-gradient(180deg, rgba(240, 253, 248, 0.78) 0%, rgba(222, 247, 237, 0.84) 100%);
+  border-color: rgba(6, 39, 28, 0.18);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
+    0 18px 50px -20px rgba(6, 39, 28, 0.35);
+}
+.light .nav-shell::after {
+  background:
+    radial-gradient(55% 130% at 12% 115%, rgba(16, 185, 129, 0.16), transparent 60%),
+    radial-gradient(55% 130% at 88% 115%, rgba(16, 185, 129, 0.13), transparent 60%);
+}
+.light .nav-active-line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(5, 150, 105, 0.85) 15%,
+    #059669 50%,
+    rgba(5, 150, 105, 0.85) 85%,
+    transparent
+  );
+  box-shadow:
+    0 0 10px rgba(5, 150, 105, 0.55),
+    0 0 22px rgba(5, 150, 105, 0.3);
+}
+.light .nav-item-glow {
+  background: radial-gradient(85% 120% at 50% 10%, rgba(16, 185, 129, 0.14), transparent 72%);
+}
+.light .btn-ghost-green {
+  border-color: rgba(5, 150, 105, 0.45);
+  background: rgba(16, 185, 129, 0.08);
+  color: #065f46;
+}
+.light .btn-ghost-green:hover {
+  color: #03301f;
 }
 
 .light .text-white {
