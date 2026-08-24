@@ -139,97 +139,95 @@ export default function ResultPage({ result, previewUrl, onNew, onBack }: Result
 
     y += 20;
 
-    // === Left column: Image ===
+    // === Uploaded image — full content width, exact aspect ratio ===
     let imgBottomY = y;
-    let mainImgH = 80;
     if (previewUrl) {
       try {
-        const { dataUrl, imgH } = await new Promise<{ dataUrl: string; imgH: number }>((resolve, reject) => {
+        const { dataUrl, ratio } = await new Promise<{ dataUrl: string; ratio: number }>((resolve, reject) => {
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d')!;
-            const srcW = Math.min(img.naturalWidth, 1400);
-            const ratio = img.naturalHeight / img.naturalWidth;
+            const srcW = Math.min(img.naturalWidth, 2000);
+            const r = img.naturalHeight / img.naturalWidth;
             canvas.width = srcW;
-            canvas.height = srcW * ratio;
+            canvas.height = srcW * r;
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.92), imgH: 80 * ratio });
+            resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.92), ratio: r });
           };
           img.onerror = () => reject(new Error('Failed to load image'));
           img.src = previewUrl;
         });
 
-        const imgW = 80;
-        mainImgH = Math.min(imgH, 95);
+        // Scale to the full report width without ever distorting the image
+        const maxImgH = 102;
+        let drawW = contentW;
+        let drawH = contentW * ratio;
+        if (drawH > maxImgH) {
+          drawH = maxImgH;
+          drawW = maxImgH / ratio;
+        }
+        const ix = ml + (contentW - drawW) / 2;
+
         doc.setFillColor(...PANEL_SOFT);
-        doc.roundedRect(ml - 1, y - 1, imgW + 2, mainImgH + 2, 3, 3, 'F');
+        doc.roundedRect(ix - 1, y - 1, drawW + 2, drawH + 2, 3, 3, 'F');
         doc.setDrawColor(...EMERALD);
         doc.setLineWidth(0.3);
-        doc.roundedRect(ml - 1, y - 1, imgW + 2, mainImgH + 2, 3, 3, 'S');
-        doc.addImage(dataUrl, 'JPEG', ml, y, imgW, mainImgH);
-        imgBottomY = y + mainImgH + 4;
+        doc.roundedRect(ix - 1, y - 1, drawW + 2, drawH + 2, 3, 3, 'S');
+        doc.addImage(dataUrl, 'JPEG', ix, y, drawW, drawH);
+        imgBottomY = y + drawH + 4;
       } catch {
         // skip
       }
     }
 
-    // === Right column: Verdict + Scores ===
-    const rightX = ml + 92;
+    // === Verdict + scores row (full width, below the image) ===
+    y = Math.max(imgBottomY + 2, 120);
+    const colGap = 4;
+    const colW = (contentW - colGap * 2) / 3;
+    const cx2 = ml + colW + colGap;
+    const cx3 = ml + (colW + colGap) * 2;
 
     // Verdict badge
-    y = 62;
     const badgeDark = !isAI && !isUncertain;
     doc.setFillColor(...badgeColor);
-    doc.roundedRect(rightX, y, 70, 11, 3, 3, 'F');
-    doc.setFontSize(13);
+    doc.roundedRect(ml, y, colW, 20, 3, 3, 'F');
+    doc.setFontSize(12);
     doc.setTextColor(badgeDark ? 4 : 10, badgeDark ? 30 : 10, badgeDark ? 18 : 10);
-    doc.text(isAI ? 'AI-GENERATED' : isUncertain ? 'UNCERTAIN' : 'REAL IMAGE', rightX + 35, y + 7.5, { align: 'center' });
+    doc.text(isAI ? 'AI-GENERATED' : isUncertain ? 'UNCERTAIN' : 'REAL IMAGE', ml + colW / 2, y + 12, { align: 'center' });
 
-    // Scores section
-    y += 18;
-    // AI Likelihood
+    // AI likelihood
     doc.setFillColor(...PANEL);
-    doc.roundedRect(rightX, y, 70, 20, 2.5, 2.5, 'F');
-    doc.setFontSize(7);
+    doc.roundedRect(cx2, y, colW, 20, 2.5, 2.5, 'F');
+    doc.setFontSize(6);
     doc.setTextColor(...TXT_MUT);
-    doc.text('AI LIKELIHOOD', rightX + 4, y + 7);
-    doc.setFontSize(18);
+    doc.text('AI LIKELIHOOD', cx2 + 4, y + 6);
+    doc.setFontSize(15);
     doc.setTextColor(...badgeColor);
-    doc.text(`${result.aiPercent}%`, rightX + 4, y + 16);
-
-    // Score bar
-    doc.setFillColor(...PANEL_SOFT);
-    doc.roundedRect(rightX + 40, y + 6, 26, 8, 1.2, 1.2, 'F');
-    doc.setFillColor(...badgeColor);
-    doc.roundedRect(rightX + 40, y + 6, 26 * (result.aiPercent / 100), 8, 1.2, 1.2, 'F');
+    doc.text(`${result.aiPercent}%`, cx2 + 4, y + 15);
 
     // Confidence
-    y += 25;
     doc.setFillColor(...PANEL);
-    doc.roundedRect(rightX, y, 70, 14, 2.5, 2.5, 'F');
-    doc.setFontSize(7);
+    doc.roundedRect(cx3, y, colW, 20, 2.5, 2.5, 'F');
+    doc.setFontSize(6);
     doc.setTextColor(...TXT_MUT);
-    doc.text('CONFIDENCE', rightX + 4, y + 6);
-    doc.setFontSize(14);
+    doc.text('CONFIDENCE', cx3 + 4, y + 6);
+    doc.setFontSize(15);
     doc.setTextColor(...TXT);
-    doc.text(`${result.confidence}%`, rightX + 4, y + 12);
+    doc.text(`${result.confidence}%`, cx3 + 4, y + 15);
 
     // Model + processing time
-    y += 18;
-    doc.setFillColor(...PANEL);
-    doc.roundedRect(rightX, y, 70, 10, 2.5, 2.5, 'F');
+    y += 24;
     doc.setFontSize(6);
     doc.setTextColor(...TXT_SUB);
-    doc.text(`Model: ${result.modelUsed || 'EfficientNet-B0 + Fusion'}`, rightX + 4, y + 4);
-    if (result.processingTimeMs) {
-      doc.text(`Time: ${(result.processingTimeMs / 1000).toFixed(1)}s`, rightX + 4, y + 8);
-    }
+    let metaLine = `Model: ${result.modelUsed || 'EfficientNet-B0 + Fusion'}`;
+    if (result.processingTimeMs) metaLine += `   ·   Time: ${(result.processingTimeMs / 1000).toFixed(1)}s`;
+    doc.text(metaLine, ml, y);
 
-    // === Key Indicators Section (below image, full width) ===
-    y = Math.max(imgBottomY + 2, 165);
+    // === Key Indicators Section (below verdict row, full width) ===
+    y += 6;
     doc.setDrawColor(...EMERALD);
     doc.setLineWidth(0.3);
     doc.line(ml, y, pw - mr, y);

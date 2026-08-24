@@ -96,8 +96,9 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
         onMouseLeave={boxTiltReset}
         className="glass nav-3d flex w-full items-center rounded-none py-2.5 pl-4 pr-3 sm:pl-6 sm:pr-4"
       >
-        <div className="nav-float flex w-full items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto pl-[52px] sm:pl-[168px]">
+        <div className="nav-float flex w-full items-center gap-3">
+          <span className="flex-1" aria-hidden="true" />
+          <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.labelKey}
@@ -113,7 +114,7 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
             ))}
           </div>
 
-          <div className="nav-pop flex shrink-0 items-center gap-1.5">
+          <div className="nav-pop flex flex-1 items-center justify-end gap-1.5">
             {user ? (
               <>
                 <div className="hidden items-center gap-2 xl:flex" title={user.email}>
