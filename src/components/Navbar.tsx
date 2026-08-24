@@ -75,6 +75,23 @@ export default function Navbar({ onAuthOpen }: NavbarProps) {
         className="glass nav-3d flex w-full items-center rounded-none py-2.5 pl-4 pr-3 sm:pl-6 sm:pr-4"
       >
         <div className="nav-float flex w-full items-center justify-between gap-3">
+          {/* Brand — logo + name (matches footer brand block) */}
+          <a href="#home" className="flex shrink-0 items-center gap-2.5" aria-label="Unmask AI home">
+            <img
+              src={`${import.meta.env.BASE_URL}logo.png`}
+              alt="Unmask AI"
+              className="h-9 w-9 rounded-xl object-contain ring-1 ring-inset ring-white/30"
+            />
+            <span className="leading-tight">
+              <span className="block text-sm font-bold tracking-wide text-white">
+                UNMASK <span className="neon-text">AI</span>
+              </span>
+              <span className="hidden text-[8px] font-semibold uppercase tracking-[0.4em] text-white/50 sm:block">
+                {t('nav.brandTag')}
+              </span>
+            </span>
+          </a>
+
           <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
             {NAV_LINKS.map((link) => (
               <a
